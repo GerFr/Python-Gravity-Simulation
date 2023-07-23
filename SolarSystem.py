@@ -14,10 +14,18 @@ from BarnesHut import Octree, Node
 
 
 class SolarSystem:
-    def __init__(self):
+    def __init__(self, theta = 1, rc = 0, absolute_pos = True, focus_index = 0):
+
+        
+        self.focus_options = ["none", "body", "cm"]
+        self.focus_type = self.focus_options[focus_index]
+        self.absolute_pos = absolute_pos
+        self.theta = theta
+        self.restitution_coefficient = rc
+
+        self.iteration =  0
         self.bodies = []
-        self.focused_body = "none"
-        self.absolute_pos = False
+        self.focused_body = None
         self.first = True
         self.time = 0
         self.total_ekin = 0
@@ -25,6 +33,8 @@ class SolarSystem:
         self.total_e = 0
         self.cm_pos = ta.array([0,0,0])
         self.cm_velo = None
+        
+        
         
     def add_body(self, body):
         self.bodies.append(body)
@@ -40,14 +50,16 @@ class SolarSystem:
     def set_focus (self, body):
         if body in self.bodies:
             self.focused_body = body
+        elif self.focus_type == "body":
+            self.focused_body = random.choice(self.bodies)
         else:
-            self.focused_body = body
+            self.focused_body = None
 
             
-    def calculate(self, timestep, theta, restitution_coefficient, draw_box):
+    def calculate(self, timestep, draw_box):
         if self.first:
             self.first = False
-            self.update_interactions(theta, restitution_coefficient)
+            self.update_interactions()
             for body in self.bodies:
                 body.acceleration = body.force/body.mass
                 
@@ -61,7 +73,7 @@ class SolarSystem:
         
 
         t1b = time.time()
-        self.update_interactions(theta, restitution_coefficient)
+        self.update_interactions()
         t2b = time.time()
         
         t1c = time.time()
@@ -86,6 +98,7 @@ class SolarSystem:
         self.total_e = self.total_ekin + self.total_epot #epot is negative, higher energy the further you are
 
         self.time += timestep
+        self.iteration += 1
 
         return t2a - t1a, t2b - t1b, t2c - t1c
 
@@ -100,26 +113,30 @@ class SolarSystem:
     def get_bodies(self):
         return self.bodies
 
+
+    def get_focus_pos(self):
+        if self.focus_type == "body":
+            pos = self.focused_body.position
+        elif self.focus_type == "cm":
+            pos = self.cm_pos
+        else:
+            pos = ta.array([0, 0, 0])
+        return pos
+        
+            
     
     def get_data(self):
-        all_data =[]
-        if self.focused_body == "none":
-            default_pos = ta.array([0, 0, 0])
-        elif self.focused_body == "cm":
-            default_pos = self.cm_pos
-        else:
-            default_pos = self.focused_body.position
+        default_pos = self.get_focus_pos()
 
-            
+        body_data =[]
         for body in self.bodies:
             name    = body.name
             pos     = body.position - default_pos #array math
-            print(pos)
             radius  = body.radius
             mass    = body.mass
             color   = body.color
             trail= [position - default_pos for position in body.trail]
-            all_data.append((name,pos,radius,mass,color,trail, body.velocity, body.acceleration, body.density, body.force, body.e_kin, body.e_pot))
+            body_data.append((name,pos,radius,mass,color,trail, body.velocity, body.acceleration, body.density, body.force, body.e_kin, body.e_pot))
 
 
         for cube in self.tree_nodes:
@@ -128,15 +145,16 @@ class SolarSystem:
                 point[1] -= default_pos[1]
                 point[2] -= default_pos[2]
 
-        self.cm_pos -= default_pos
-     
-        return all_data, self.tree_nodes, self.cm_pos
+         
+        
+        system_data = [self.focus_type, self.focused_body, self.absolute_pos, self.theta, self.restitution_coefficient, self.total_ekin, self.total_epot, self.total_e, self.cm_pos, self.iteration, len(self.bodies), self.tree.root_node.middle, self.tree.root_node.dimension]        
+        return body_data, self.tree_nodes, system_data, self.cm_pos-default_pos
 
 
 
 
-    def switch_focus(self,direction):
-        if self.focused_body not in ["none","cm"]:
+    def switch_focus(self,direction):   
+        if self.focus_type == "body":
             focused_index = self.bodies.index(self.focused_body)
 
             if direction == "previous":
@@ -159,37 +177,29 @@ class SolarSystem:
 
 
 
-    def update_interactions(self, theta, restitution_coefficient):
-        if self.absolute_pos or self.focused_body == "none":
-            default_pos = ta.array([0,0,0])
-        elif self.focused_body == "cm":
-            default_pos = self.cm_pos
-        else:
-            default_pos = self.focused_body.position
-
-        
-        
+    def update_interactions(self):
+        center = self.get_focus_pos()
 
         largest_val = 0
         furthest_bod = None
         for bodie in self.bodies:
             for i, val in enumerate(bodie.position):
-                dist_sqr = (val-default_pos[i])**2 
+                dist_sqr = (val-center[i])**2 
                 if dist_sqr > largest_val:
                     largest_val = dist_sqr
                     largest_index = i
                     furthest_bod = bodie
             
-        dimension = math.sqrt(((furthest_bod.position[largest_index]-default_pos[largest_index])*2.5)**2)#
-        root = Node(default_pos, dimension)#[0,0,0]
-        self.tree = Octree(self.bodies, root, theta)
+        dimension = math.sqrt(((furthest_bod.position[largest_index]-center[largest_index])*2.5)**2)#
+        root = Node(center, dimension)
+        self.tree = Octree(self.bodies, root, self.theta)
         root.compute_mass_distribution()
         self.tree.update_forces_collisions()
-        self.compute_collisions(self.tree.collision_dic, restitution_coefficient)
+        self.compute_collisions(self.tree.collision_dic)
         
         
 
-    def compute_collisions(self, collisions, restitution_coefficient):
+    def compute_collisions(self, collisions):
         #sort collisions from lowest to highest mass
         self.destroyed = []
         bodies = list(collisions.keys())
@@ -198,7 +208,7 @@ class SolarSystem:
             other_bodies = collisions[body]
             for other in other_bodies:
                 if other not in self.destroyed:
-                    body.inelastic_collision(other, restitution_coefficient)#we know that body has bigger mass than other so other is deleted we have to check if other was deleted by a previous collision with another planet
+                    body.inelastic_collision(other, self.restitution_coefficient)#we know that body has bigger mass than other so other is deleted we have to check if other was deleted by a previous collision with another planet
                     
                 
             
@@ -224,7 +234,6 @@ class SolarSystemBody:
         self.counter        = 0
         self.point_dist     = point_dist
         self.trail          = []
-        self.other_relative_trails = {}
         self.acceleration   = ta.array([0,0,0])
         self.force          = ta.array([0,0,0])
         self.e_pot          = 0
@@ -235,13 +244,12 @@ class SolarSystemBody:
     def update_position(self, timestep):
         self.position += (timestep* (self.velocity+ timestep*self.acceleration/2))
 
-        if not self.solar_system.absolute_pos:
-            if self.solar_system.focused_body not in ["none", "cm"]:
+        if not self.solar_system.absolute_pos: #relative movement
+            if self.solar_system.focus_type == "body":
                 self.position -= (timestep* (self.solar_system.focused_body.velocity+ timestep*self.solar_system.focused_body.acceleration/2))
-            elif self.solar_system.focused_body == "cm":
+            elif self.solar_system.focus_type == "cm":
                 self.position -= self.solar_system.cm_velo
 
-                
         self.counter += 1
         if self.counter == self.point_dist:
             self.trail.append(self.position)
