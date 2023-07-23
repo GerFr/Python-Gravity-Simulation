@@ -22,18 +22,21 @@ class Interface():
 
         self.fov_range      = (200, 4000, 2000)
         self.y_rot_range    = (-90, 90, 0)
-        self.default_dist   = 2*10**9
+        self.default_dist   = 10**12
         self.z_rotation     = 0
         self.frame_count    = 0
+
+        self.start_x_rot    = 0
+        self.start_y_rot    = 0
         
 
         self.mouse_click1   = False
         self.mouse_click2   = False
         self.mouse_click3   = False
-        self.pause          = True
+        self.pause          = False
         self.finished       = True
 
-        self.timestep       = 10000 #in seconds, "simulation-time" per frame
+        self.timestep       = 60000 #in seconds, "simulation-time" per frame
         self.timepause      = 50#pause between frames
         self.theta          = 1
         self.restitution_coefficient = 0 #inelastic collisions, if 1 fully elastic if 0 merge of planets
@@ -45,6 +48,7 @@ class Interface():
 
         self.show_data      = False
         self.show_time      = True
+        self.draw_frame_count = False
 
         
 
@@ -54,22 +58,27 @@ class Interface():
         self.font           = ("Courier New",15, "normal")
         self.cube_color     = "green"
 
-        self.body_size_factor = 2 #accurate:1
+        self.body_size_factor = 1
+        self.min_body_size = 8
 
-        self.draw_trail     = False
         self.draw_box       = False
-        self.path_size      = .2
-        trail_length        = 2#1000
+        self.draw_trail     = True
+        self.path_size      = 1.5*10**9
+        self.trail_length        = 1000
         trail_resolution    = .5 #0-1
-        self.trail_node_number   = int(trail_length * trail_resolution)
-        self.trail_node_distance = int(trail_length / self.trail_node_number) #amount of calculations between each node
+        self.path_planet_color = True
+        self.start_thickness= 3
+        self.thickness_scale=.9
+        
+        self.trail_node_number   = int(self.trail_length * trail_resolution)
+        self.trail_node_distance = int(self.trail_length / self.trail_node_number) #amount of calculations between each node
 
         self.pointer_size   = 50
         self.onscreen       = []
 
         self.image_folder   = "C:/Users/gerri/Desktop/data"
         self.get_vid        = False
-        self.max_frame      = 10000
+        self.max_frame      = 3600
 
 
         self.draw_rot       = True
@@ -93,27 +102,35 @@ class Interface():
         
         
         
-        
-                         #mass,density, position,velocity,      color data from the web
-        self.starting_dat  = [{'suns':    [('Sun', 1, 1.41, (0, 0, 0), (0, 0,0), 'yellow')],
-                              'planets': [('Earth', 3.003*10**(-6),  5.5, (-1, 0, 0), (0, 1.992007*10**(-7), 0), 'lightgreen'),
-                                          ('Mercury',  1.651*10**(-7),  5.43, (-0.4, 0, 0), (0, 3.1658205*10**(-7),0 ), 'green')]}]
+                        
+##        #6
+##        speed = 4*10**(-9)
+##        size = 10**(-2)
+##        self.starting_data = []
+##        weights = ta.array([5,8,5,8,5,8])
+##        offset = [.9995,1,1.0005,.9995,1,1.0005]
+##        nr_systems = 500
+##        for i in range(nr_systems):
+##            color = self.rainbow_rgb[int((i/(nr_systems))*len(self.rainbow_rgb))]
+##            self.starting_data.append({'planets': [('1', weights[0]*10**(-6),  5.5, (0, size/2, size/2), (-speed, 0, 0), color),
+##                                                   ('2', weights[1]*10**(-6),  5.5, (-math.tan(math.radians(30))*size, -size/2, size/2), (math.sin(math.radians(30))*speed,-math.cos(math.radians(30))*speed, 0), color),
+##                                                   ('3', weights[2]*10**(-6),  5.5, (math.tan(math.radians(30))*size, -size/2, size/2), (math.cos(math.radians(60))*speed,math.sin(math.radians(60))*speed,0), color),
+##                                                   ('1', weights[3]*10**(-6),  5.5, (0, size/2, -size/2), (speed, 0, 0), color),
+##                                                   ('2', weights[4]*10**(-6),  5.5, (-math.tan(math.radians(30))*size, -size/2, -size/2), (-math.sin(math.radians(30))*speed, math.cos(math.radians(30))*speed, 0), color),
+##                                                   ('3', weights[5]*10**(-6),  5.5, (math.tan(math.radians(30))*size, -size/2, -size/2), (-math.cos(math.radians(60))*speed, -math.sin(math.radians(60))*speed,0), color)]})
+##            weights *= offset
 
-        #3 body problem
-        speed = 2*10**(-9)
-        size = 10**(-2)
-        self.starting_data = []
-        weights = ta.array([3,5,8])
-        offset = .9999999
-        nr_bodies = 250
-        for i in range(nr_bodies):
-            color = self.rainbow_rgb[int((i/(nr_bodies))*len(self.rainbow_rgb))]
-            self.starting_data.append({'planets': [('1', weights[0]*10**(-6),  5.5, (0, size/2, 0), (-speed, 0, 0), color),
-                                              ('2', weights[1]*10**(-6),  5.5, (-math.tan(math.radians(30))*size, -size/2, -size), (math.sin(math.radians(30))*speed,-math.cos(math.radians(30))*speed, 0), color),
-                                              ('3', weights[2]*10**(-6),  5.5, (math.tan(math.radians(30))*size, -size/2, size), (math.cos(math.radians(60))*speed,math.sin(math.radians(60))*speed,0), color)]})
-            weights *= offset
-        
-        
+
+
+
+
+        #mass,density, position,velocity,      color data from the web
+        self.starting_data  = [{'suns':    [('Sun', 1, 1.41, (0, 0, 0), (0, 0,0), 'yellow')],
+                              'planets': [('Earth', 3.003*10**(-6),  5.5, (-1, 0, 0), (0, 1.992007*10**(-7), 0), 'lightgreen'),
+                                          ('Mercury',  1.651*10**(-7),  5.43, (-0.4, 0, 0), (0, 3.1658205*10**(-7),0 ), 'orange')]}]
+
+
+            
         #Values for random creation
         self.start_random   = False
         self.size           = 50*10000000000 #in 10**(-10) au, len of cube size, has to be big number for randint
@@ -309,8 +326,11 @@ class Interface():
                     
     def draw_time(self,time):
         self.data_pointer.goto(self.width*-0.46, -self.height*0.42)
-        times = ConvertSectoDay(self.solar_system.time)                                                                                                                                                         
-        text = f"years:   {times[0]}\ndays:    {times[1]}\nhours:   {times[2]}\nminutes: {times[3]}\nseconds: {times[4]}"
+        times = ConvertSectoDay(self.solar_system.time)
+        text = ""
+        if self.draw_frame_count:
+            text += f"frame:   {self.frame_count}\n"
+        text += f"years:   {times[0]}\ndays:    {times[1]}\nhours:   {times[2]}\nminutes: {times[3]}\nseconds: {times[4]}"
         self.data_pointer.clear()
         self.data_pointer.write(text, align="left", font=self.font)
 
@@ -323,8 +343,8 @@ class Interface():
         self.distance   = self.default_dist
         self.x_offset   = 0
         self.y_offset   = 0
-        self.x_rotation = 0
-        self.y_rotation = self.y_rot_range[2]
+        self.x_rotation = self.start_x_rot
+        self.y_rotation = self.y_rot_range[2]+self.start_y_rot
         
 
 
@@ -349,21 +369,34 @@ class Interface():
                 return None, None
 
 
-    def draw_last_pos(self, last_pos):
-        last_screen_pos = []
-        for pos in last_pos:
-            s_pos, f = self.get_screen_xy(*pos)
-            last_screen_pos.append((s_pos, f))
+    def draw_last_pos(self, last_pos, color):
         
+        last_screen_pos = []
+
+        last_pos.reverse()
+        thickness = self.start_thickness
+        scale = self.thickness_scale
+        
+        for i, pos in enumerate(last_pos):
+            thickness *= scale
+            
+            s_pos, f = self.get_screen_xy(*pos)
+            last_screen_pos.append((s_pos, f, thickness))
+
+
+        last_pos.reverse()
         self.pointer.pencolor(self.path_color)
+        if self.path_planet_color:
+            self.pointer.pencolor(color)
         for posf in last_screen_pos:
             pos = posf[0]
             f   = posf[1]
+            thickness = posf[2]
             
             if pos == None:
                 self.pointer.up()
             else:
-                self.pointer.pensize(self.path_size*f)
+                self.pointer.pensize(self.path_size*f*thickness)
                 self.pointer.goto(pos)
                 self.pointer.down()
                 
@@ -455,6 +488,7 @@ class Interface():
         self.pointer.clear()
         
         #onscreen((name,pos,radius,mass,color,trail,velocity,acceleration,density,force,2dpos,f))
+        self.onscreen = []
         for system in self.solar_systems:
             self.solar_system = system
             bodies, nodes, system, cm = system.get_data()
@@ -466,37 +500,37 @@ class Interface():
                 self.color_map_bodies(bodies)
 
             #get on screen planets and draw trails, creation of special onscreen datalist
-            self.onscreen = []
+            
             for body in bodies:
                 body_pos, f = self.get_screen_xy(*body[1])
                 if self.draw_trail:
-                    self.draw_last_pos(body[5])
+                    self.draw_last_pos(body[5],body[4])
                 if body_pos != None:
                     data = (*body, body_pos, f)
                     self.onscreen.append(data)
 
 
-            self.onscreen.sort(key=lambda element: element[11])#sort by f
-            for body in self.onscreen:
-                body_pos    = body[12]
-                radius      = body[2]
-                color       = body[4]
-                f           = body[13]
-                rad = radius*f*self.body_size_factor
-                if rad <.5:
-                    rad =.5
-                self.draw_circle(self.pointer, body_pos, rad, color, color)
-            t2b = time.time()
-            
-            if self.show_cm:
-                self.draw_cm(cm)
+        self.onscreen.sort(key=lambda element: element[11])#sort by f
+        for body in self.onscreen:
+            body_pos    = body[12]
+            radius      = body[2]
+            color       = body[4]
+            f           = body[13]
+            rad = radius*f*self.body_size_factor
+            if rad <self.min_body_size:
+                rad =self.min_body_size
+            self.draw_circle(self.pointer, body_pos, rad, color, color)
+        t2b = time.time()
+        
+        if self.show_cm:
+            self.draw_cm(cm)
 
-            if self.draw_box:
-                for qube in nodes:
-                    self.draw_cube(qube)
+        if self.draw_box:
+            for qube in nodes:
+                self.draw_cube(qube)
 
-            if self.show_data:
-                self.draw_data(system)
+        if self.show_data:
+            self.draw_data(system)
                 
 
 
