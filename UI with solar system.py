@@ -30,13 +30,14 @@ class Interface():
         self.path_size  = .3
 
         self.timestep = 250
-        self.timepause = 5
+        self.timepause = 20
 
-        self.pointer_size = 50
-        
+        self.pointer_size = 50        
 
         self.setup_canvas()
         self.setup_solar_system()
+        
+        
         self.reset()
         self.window.id = self.window.after(self.timepause, self.update_system)
 
@@ -77,6 +78,11 @@ class Interface():
         self.mouse.ht()
         self.mouse.color("white")
 
+        self.time_pointer = turtle.RawTurtle(self.fenster)
+        self.time_pointer.up()
+        self.time_pointer.ht()
+        self.time_pointer.color("white")
+
         self.canvas.bind("<MouseWheel>", self.mouse_scroll)
         self.canvas.bind("<Motion>", self.get_object)
         self.canvas.bind("<B1-Motion>", self.offset)
@@ -85,6 +91,18 @@ class Interface():
         self.canvas.bind("<ButtonRelease-1>", lambda event: self.mouse_off(event, "b1"))
         self.canvas.bind("<ButtonRelease-2>", lambda event: self.mouse_off(event, "b2"))
         self.canvas.bind("<ButtonRelease-3>", lambda event: self.mouse_off(event, "b3"))
+        self.window.bind("<Left>",  lambda event: self.switch_focus(event,"left"))
+        self.window.bind("<Right>", lambda event: self.switch_focus(event,"right"))
+        self.window.bind("<Up>",    lambda event: self.switch_focus(event,"right"))
+        self.window.bind("<Down>",  lambda event: self.switch_focus(event,"left"))
+
+    def switch_focus(self,event,direction):
+        if direction == "left":
+            self.solar_system.switch_focus("previous")
+        elif direction == "right":
+            self.solar_system.switch_focus("next")
+        if not self.absolute_pos:
+            self.solar_system.clear_trail()
         
     
         
@@ -108,12 +126,17 @@ class Interface():
         elif button == "b3":
             self.mouse_click3 = False
 
+        if self.pause_button.cget("text") == "pause":
+            self.pause = False
+            self.window.id = self.window.after(self.timepause, self.update_system)
+
 
 
     def change_fov (self, event):
         if not self.mouse_click2:
             self.old_y = event.y
             self.mouse_click2 = True
+            self.pause = True
         elif self.mouse_click2 and self.finished:
             self.FOV -= (event.y - self.old_y)*10
             self.old_y = event.y
@@ -131,7 +154,7 @@ class Interface():
             self.old_x = event.x
             self.old_y = event.y
             self.mouse_click3 = True
-            
+            self.pause = True
         elif self.mouse_click3 and self.finished:
             self.x_rotation += (event.x - self.old_x)/10
             self.y_rotation -= (event.y - self.old_y)/10
@@ -158,6 +181,7 @@ class Interface():
             self.old_x = event.x
             self.old_y = event.y
             self.mouse_click1 = True
+            self.pause = True
         elif self.mouse_click1 and self.finished:
             self.x_offset += (event.x - self.old_x)*self.distance/1000
             self.y_offset -= (event.y - self.old_y)*self.distance/1000
@@ -177,23 +201,40 @@ class Interface():
 
 
     def get_object(self, event):
-        x =  event.x-(self.window.maxsize()[0]/2)
-        y = -event.y+(self.window.maxsize()[1]/2)-30
+        width = self.window.maxsize()[0]
+        height= self.window.maxsize()[1]
+        x =  event.x-(width/2)
+        y = -event.y+(height/2)-30
         
-
-        #y -= self.y_offset
-
         for body in self.onscreen:
             pos_x = body[1][0]
             pos_y = body[1][1] 
-            pointer_range =  body[5]/10 * self.pointer_size
+            pointer_range =  body[6]/10 * self.pointer_size
+
             if x > (pos_x - pointer_range) and x < (pos_x + pointer_range) and y > (pos_y - pointer_range) and y < (pos_y + pointer_range):
+                
+                round_pos = []
+                for val in body[7]:
+                    round_pos.append(round(val))
+                text =  f"Name:     {body[0]}\nPosition: {round_pos}\nRadius:   {body[2]}\nMass:     {body[3]}"
+
                 self.mouse.clear()
-                self.mouse.goto(self.window.maxsize()[0]*-0.46, self.window.maxsize()[1]*0.42)
-                self.mouse.write(body[0], font=("Verdana",15, "normal"))
+                self.mouse.goto(width*-0.46, height*0.26)
+                self.mouse.write(text, align="left", font=("Verdana",15, "normal"))
                 self.fenster.update()
                 
-            
+    def draw_time(self,time):
+        width = self.window.maxsize()[0]
+        height= self.window.maxsize()[1]
+        self.time_pointer.goto(width*-0.46, -height*0.42)
+        times = ConvertSectoDay(self.solar_system.time)
+        text = f"years: {times[0]}\ndays: {times[1]}\nhours: {times[2]}:{times[3]}:{times[4]}"
+        
+        self.time_pointer.clear()
+        self.time_pointer.write(text, align="left", font=("Verdana",15, "normal"))
+        self.fenster.update()
+        
+        
 
     def reset(self):
         self.FOV        = self.fov_range[2]
@@ -255,6 +296,7 @@ class Interface():
 
     def update_vertexes(self):
         data = self.solar_system.get_data()
+        self.draw_time(self.solar_system.time)
         
         self.finished = False
         self.pointer.clear()
@@ -263,16 +305,17 @@ class Interface():
         for body in data:
             body_pos, f = self.get_screen_xy(*body[1])
             if body_pos != None:
-                self.onscreen.append((body[0], body_pos, body[2], body[3], body[4], f))
+                self.onscreen.append((body[0], body_pos, body[2], body[3], body[4], body[5], f, body[1]))
         self.onscreen.sort(key=lambda element: element[5])
 
 
         for body in self.onscreen:
             body_pos    = body[1]
             radius      = body[2]
-            color       = body[3]
-            last_pos    = body[4]
-            f           = body[5]
+            mass        = body[3]
+            color       = body[4]
+            last_pos    = body[5]
+            f           = body[6]
 
             if self.draw_trail:
                 self.draw_last_pos(last_pos)
@@ -304,29 +347,29 @@ class Interface():
                     mass       = 5864306,          
                     radius     = 10,
                     position   = (0, 0, 0),
-                    velocity   = (0, 0, 0),#(-10**(-2.9), 0, 10**(-4))
+                    velocity   = (0, 0, 0),
                     color      = "yellow",
                     nr_pos     = 100)
                 
-##        sun2 = Sun(self.solar_system,
-##                    name       = "sun2",
-##                    mass       = 5864306,          
-##                    radius     = 10,
-##                    position   = (100, 100, 100),
-##                    velocity   = (10**(-4), 0, -10**(-2.9)),
-##                    color      = "yellow",
-##                    nr_pos     = 1000)
+        sun2 = Sun(self.solar_system,
+                    name       = "sun2",
+                    mass       = 5864306,          
+                    radius     = 10,
+                    position   = (100, -100, 100),
+                    velocity   = (10**(-4), 0, -10**(-2.9)),
+                    color      = "yellow",
+                    nr_pos     = 100)
                 
         planet1 = (Planet(self.solar_system,
                     name       = "planet1",
                     mass       = 20943,
                     radius     = 1,
-                    position   = (50, 50, 0), #100 -60 -100
-                    velocity   = (10**(-4), 10**(-4), 2*10**(-3)),#(-4*10**(-4), -3*10**(-4), -2*10**(-4))
+                    position   = (50, -50, 0), 
+                    velocity   = (-10**(-4), -10**(-4), -2*10**(-3)),
                     color      = "lightgreen",
                     nr_pos     = 100)
                 )
-        self.solar_system.set_focus(sun1)
+        self.solar_system.set_focus(planet1)
         self.solar_system.absolute_pos = self.absolute_pos
 
     
@@ -338,6 +381,17 @@ class Interface():
             self.window.id = self.window.after(self.timepause, self.update_system)
 
 
-
+def ConvertSectoDay(n):
+    year = n // (365*24*3600)
+    n %= (365 * 24 * 3600)
+    day = n // (24 * 3600)
+    n %= (24 * 3600)
+    hour = n // 3600
+    n %= 3600
+    minutes = n // 60
+    n %= 60
+    seconds = n
+	
+    return (year,day,hour,minutes,seconds)
 
 Interface()

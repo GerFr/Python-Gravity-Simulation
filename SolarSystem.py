@@ -17,6 +17,7 @@ class SolarSystem:
         self.bodies = []
         self.focused_body = None
         self.absolute_pos = False
+        self.time = 0
         
     def add_body(self, body):
         self.bodies.append(body)
@@ -49,6 +50,8 @@ class SolarSystem:
 
         for body in self.bodies:
             body.update_velocity(timestep)
+
+        self.time += timestep
             
 
     def get_bodies(self):
@@ -70,6 +73,7 @@ class SolarSystem:
                        body.position[1] - default_pos[1],
                        body.position[2] - default_pos[2])
             radius  = body.radius
+            mass    = body.mass
             color   = body.color
             last_pos= []
 
@@ -78,12 +82,32 @@ class SolarSystem:
                                  position[1] - default_pos[1],
                                  position[2] - default_pos[2]))
                 
-            all_data.append((name,pos,radius,color,last_pos))
+            all_data.append((name,pos,radius,mass,color,last_pos))
 
         return all_data
-    
-                
+
+
+    def switch_focus(self,direction):
+        if self.focused_body != None:
+            focused_index = self.bodies.index(self.focused_body)
+
+            if direction == "previous":
+                focused_index += 1
+                if focused_index > len(self.bodies)-1:
+                    focused_index = 0
+
+            elif direction == "next":
+                focused_index -= 1
+                if focused_index < 0:
+                    focused_index = len(self.bodies)-1
+
+            self.set_focus(self.bodies[focused_index])
+
+    def clear_trail(self):
+        for body in self.bodies:
+            body.last_pos= []
             
+
 
                 
 
