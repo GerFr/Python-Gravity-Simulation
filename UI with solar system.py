@@ -44,13 +44,15 @@ class Interface():
         self.path_color     = "darkgrey"
         self.bg_color       = "black"
         self.text_color     = "white"
-        self.font           = ("Verdana",15, "normal")
+        self.font           = ("Courier New",15, "normal")
         self.cube_color     = "green"
+
+        self.bodie_size_factor = 1#1 accurate
 
         self.draw_trail     = False
         self.draw_box       = False
         self.path_size      = .2
-        trail_length        = 1000
+        trail_length        = 2#1000
         trail_resolution    = .5 #0-1
         self.trail_node_number   = int(trail_length * trail_resolution)
         self.trail_node_distance = int(trail_length / self.trail_node_number) #amount of calculations between each node
@@ -62,20 +64,30 @@ class Interface():
         self.get_vid        = False
         self.max_frame      = 7200
 
-        self.rot_cube_pos = [500, -300]
-        self.rot_cube_scale = 50
-        self.rot_cube_color = "grey"
+
+        self.draw_rot       = True
+        self.rot_cube_pos   = [.8, -.8]#zwischen -1,1, scale of screen
+        self.rot_cube_scale = 80
+        self.rot_cube_scolor= "grey"
+        self.rot_cube_lcolor= "white"
+
+        
+        self.map_colors     = True
+        self.rainbow_rgb    = rgb_farben()
+        self.color_attribute = "acceleration"
+        self.color_mode_abs = True
         
         
-        self.start_random   = False                 #mass,density, position,velocity,      color data from the web
-        self.starting_data  = {'suns':    [('sun 1', 1, 1.41, (0, 0, 0), (0, 0,0), 'yellow')],
+        
+        self.start_random   = True                 #mass,density, position,velocity,      color data from the web
+        self.starting_data  = {'suns':    [('Sun', 1, 1.41, (0, 0, 0), (0, 0,0), 'yellow')],
                               'planets': [('Earth', 3.003*10**(-6),  5.5, (-1, 0, 0), (0, 1.992007*10**(-7), 0), 'lightgreen'),
                                           ('Mercury',  1.651*10**(-7),  5.43, (-0.4, 0, 0), (0, 3.1658205*10**(-7),0 ), 'green')]}
 
         #Values for random creation
         self.size           = 20*10000000000 #in 10**(-10) au, len of cube size, has to be big number for randint
         self.max_velo       = 5000#2 #in 10^-10 AU/s
-        self.number_stars   = 2500
+        self.number_stars   = 5000
         self.number_planets = 0 #trail resolution anpassen
         self.planet_colors  = ["beige", "lightgreen", "lightblue"]
         self.sun_colors     = ["yellow","orange","red"]
@@ -107,7 +119,7 @@ class Interface():
     def setup_canvas(self):
         self.window = tkinter.Tk()
         self.window.title("Gravity Simulation")
-        self.window.attributes("-fullscreen", True)
+        self.window.attributes("-fullscreen", False)
         window_size_tuple = self.window.maxsize()
         self.width = window_size_tuple[0]
         self.height= window_size_tuple[1]
@@ -128,6 +140,7 @@ class Interface():
 
         self.fenster = turtle.TurtleScreen(self.canvas)
         self.fenster.tracer(0)
+        self.fenster.colormode(255)
         self.fenster.bgcolor(self.bg_color)
         self.pointer = turtle.RawTurtle(self.fenster)
         self.pointer.ht()
@@ -242,7 +255,7 @@ class Interface():
         
 
 
-
+#onscreen((name,pos,radius,mass,color,trail,velocity,acceleration,density,force,2dpos,f))
     def mouse_hover(self, event):
         found = False
         if event != None:
@@ -250,15 +263,20 @@ class Interface():
             x =  event.x-(self.width/2)
             y = -event.y+(self.height/2)-30
             for body in self.onscreen:
-                pos_x = body[1][0]
-                pos_y = body[1][1] 
-                pointer_range =  body[6]/10 * self.pointer_size
+                pos_x = body[10][0]
+                pos_y = body[10][1] 
+                pointer_range =  body[11]/10 * self.pointer_size
                 if x > (pos_x - pointer_range) and x < (pos_x + pointer_range) and y > (pos_y - pointer_range) and y < (pos_y + pointer_range):
                     found = True
                     name    = body[0]
-                    pos     = body[5]
+                    pos     = body[1]
                     radius  = body[2]
-                    mass    = body[3]   
+                    mass    = body[3]
+                    velocity= body[6]
+                    acceleration = body[7]
+                    density = body[8]
+                    force = body[9]
+                    
         elif self.solar_system.focused_body != None:
             found = True
             hover_body = self.solar_system.focused_body
@@ -266,15 +284,24 @@ class Interface():
             pos     = hover_body.position
             radius  = hover_body.radius
             mass    = hover_body.mass
+            velocity= hover_body.velocity
+            acceleration = hover_body.acceleration
+            density = hover_body.density
+            force = hover_body.force
+
+        num = 2.32432432423e25
+        f'The result is {num:.3e}'
 
         if found:
-            round_pos = []
-            for val in pos:
-                round_pos.append(round(val))
+           
+            vectors = [pos, velocity, acceleration, force]
+            for i in range(len(vectors)):
+                vectors[i] = f"{vectors[i][0]:.2e}, {vectors[i][1]:.2e}, {vectors[i][2]:.2e}"
+                
                     
-            text =  f"Name:     {name}\nPosition:  {round_pos}\nRadius:   {radius}\nMass:      {mass}"
+            text =  f"""Name:         {name}\nRadius:       {radius:.2e}\nMass:         {mass:.2e}\nDensity:      {density}\nPosition:     {vectors[0]}\nVelocity:     {vectors[1]}\nAcceleration: {vectors[2]}\nForce:        {vectors[3]}\n"""
             self.mouse.clear()
-            self.mouse.goto(self.width*-0.46, self.height*0.35)
+            self.mouse.goto(self.width*-0.46, self.height*0.25)
             self.mouse.write(text, align="left", font=self.font)
             self.fenster.update()
 
@@ -282,10 +309,7 @@ class Interface():
     def draw_time(self,time):
         self.time_pointer.goto(self.width*-0.46, -self.height*0.42)
         times = ConvertSectoDay(self.solar_system.time)                                                                                                                                                         
-        text = f"years: {times[0]}\ndays: {times[1]}\nhours: {times[2]}:{times[3]}:{times[4]}"
-        
-        #print(f"draw = {self.drawing_time: .4f},   rot = {self.time_matrix: .4f},   trail/planet = {self.trail_sort: .4f},   calc = {self.physics_time: .4f},   pos/velo = {self.time_position: .4f},   forces = {self.time_interactions: .4f}")#, impact ={self.time_velocity: .4f}, update ={self.planet_update: .4f}
-        
+        text = f"years:   {times[0]}\ndays:    {times[1]}\nhours:   {times[2]}\nminutes: {times[3]}\nseconds: {times[4]}"
         self.time_pointer.clear()
         self.time_pointer.write(text, align="left", font=self.font)
         
@@ -365,6 +389,9 @@ class Interface():
     def draw_rot_cube(self):
         coord  =["X", "Y", "Z"]
         fig = []
+        mx = self.width*self.rot_cube_pos[0]/2
+        my = self.height*self.rot_cube_pos[1]/2
+        
         for point in [[self.rot_cube_scale,0,0],[0,self.rot_cube_scale,0],[0,0,self.rot_cube_scale]]:
             line = []
             for i in range(2):
@@ -374,11 +401,12 @@ class Interface():
                     default_pos = np.array([[-point[0]],[-point[1]],[-point[2]]])
                 pos = self.rotation_matrix * default_pos
                 f = self.FOV / (pos[2,0]+(self.FOV))
-                sx, sy = (pos[0,0]*f)+self.rot_cube_pos[0], (-pos[1,0]*f)+self.rot_cube_pos[1]
+                sx, sy = (pos[0,0]*f)+(mx), (-pos[1,0]*f)+(my)
                 line.append([[sx,sy], f])
             fig.append(line)
 
-        self.pointer.pencolor(self.rot_cube_color)
+        self.pointer.pencolor(self.rot_cube_scolor)
+        
         for line in fig:
             pos_fore = 0 
             if line[0][1] >=1:  #positve side of axis in foreground, thicker border when drawing that side
@@ -386,66 +414,57 @@ class Interface():
             for n in range(2):
                 self.pointer.pensize(2+(4*pos_fore))
                 pos_fore = (pos_fore-1)*-1
-                self.pointer.goto(self.rot_cube_pos)
+                self.pointer.goto(mx,my)
                 self.pointer.down()
                 self.pointer.goto(line[n][0])
                 self.pointer.up()
 
-        self.pointer.pencolor("white")
+        self.pointer.pencolor(self.rot_cube_lcolor)
         for i in range(len(fig)):
             self.pointer.goto(fig[i][0][0])
             self.pointer.write(coord[i], align="center", font=self.font)
 
                 
-            
-            
 
-        
-
-            
-            
         
 
     def update_vertices(self):
-        t1a = time.time()
         data, nodes = self.solar_system.get_data()
-        self.draw_time(self.solar_system.time)
+        
+        t1a = time.time()
         self.rotation_matrix = Rx(math.radians(self.x_rotation)) * Ry(math.radians(180-self.y_rotation)) * Rz(math.radians(180-self.z_rotation))
         self.finished = False
         t2a = time.time()
 
+        #onscreen((name,pos,radius,mass,color,trail,velocity,acceleration,density,force,2dpos,f))
         
         t1b = time.time()
         self.pointer.clear()
         
-        
+        if self.map_colors:
+            self.color_map_bodies(data)
 
+        #get on screen planets and draw trails, creation of special onscreen datalist
         self.onscreen = []
         for body in data:
             body_pos, f = self.get_screen_xy(*body[1])
-            
             if self.draw_trail:
                 self.draw_last_pos(body[5])
-                
             if body_pos != None:
-                self.onscreen.append((body[0], body_pos, body[2], body[3], body[4], body[1], f))
-        self.onscreen.sort(key=lambda element: element[6])
-
-        if self.draw_box:
-            for qube in nodes:
-                self.draw_cube(qube)
-        
+                self.onscreen.append((*body, body_pos, f))
 
 
-        
+        self.onscreen.sort(key=lambda element: element[11])#sort by f
         for body in self.onscreen:
-            body_pos    = body[1]
+            body_pos    = body[10]
             radius      = body[2]
             color       = body[4]
-            f           = body[6]
-            rad = radius*f
-            if rad <1:
-                rad =1
+            f           = body[11]
+            
+            rad = radius*f*self.bodie_size_factor
+            if rad <.5:
+                rad =.5
+
             self.pointer.goto(body_pos)
             self.pointer.fd(rad)
             self.pointer.left(90)
@@ -463,12 +482,51 @@ class Interface():
             self.getter(self.canvas)
         t2c = time.time()
 
-        self.draw_rot_cube()
+        t1d = time.time()
+        if self.draw_box:
+            for qube in nodes:
+                self.draw_cube(qube)
+        if self.draw_rot:
+            self.draw_rot_cube()
+        self.draw_time(self.solar_system.time)
+        self.mouse_hover(None)
+        t2d = time.time()
+
+        self.finished = True
+        return t2a-t1a, t2b-t1b, t2c-t1c, t2d-t1d
+
+    
+
+    def color_map_bodies(self, data):#relative colors 
+        
+        dic = {"mass":3,"radius":2,"density":8, "velocity":[6,5*10**5],"acceleration":[7,.1],"force":[9,10**27]}
+
+        if self.color_attribute in ["mass", "radius", "density"]:
+            data.sort(key=lambda element:  element[dic[self.color_attribute]])
+        elif not self.color_mode_abs and self.color_attribute in ["velocity","acceleration","force"]:
+            data.sort(key=lambda element:  math.sqrt(ta.dot(element[dic[self.color_attribute][0]],element[dic[self.color_attribute][0]])))#magnitude of vector
+
+        if not self.color_mode_abs or self.color_attribute in ["mass", "radius", "density"]:
+            for i in  range(len(data)):
+                color = self.rainbow_rgb[int(i * ((len(self.rainbow_rgb)-1)/len(data)))]
+                data[i] = (data[i][0],data[i][1],data[i][2],data[i][3],color,data[i][5],data[i][6],data[i][7],data[i][8],data[i][9])
+
+        else:
+            for i in range(len(data)):
+                relative_index = math.sqrt(ta.dot(data[i][dic[self.color_attribute][0]],data[i][dic[self.color_attribute][0]]))/dic[self.color_attribute][1]
+                index = int(len(self.rainbow_rgb)*relative_index)
+                if index > len(self.rainbow_rgb)-1:
+                    index= len(self.rainbow_rgb)-1
+                color = self.rainbow_rgb[index]
+                data[i] = (data[i][0],data[i][1],data[i][2],data[i][3],color,data[i][5],data[i][6],data[i][7],data[i][8],data[i][9])
+
+            
+            
+
 
         
 
-        self.finished = True
-        return t2a-t1a, t2b-t1b, t2c-t1c 
+        
 
     def random_system(self):
         '''{'suns':    [('sun 1', 1, 1.41, (0, 0, 0), (0, 0,0), 'yellow')],
@@ -547,17 +605,20 @@ class Interface():
     def update_system(self):
         if not self.pause:
             t1 = time.time()
-            self.time_position, self.time_interactions, self.time_velocity = self.solar_system.calculate(self.timestep, self.theta, self.restitution_coefficient)
+            self.time_position, self.time_interactions, self.time_nodes = self.solar_system.calculate(self.timestep, self.theta, self.restitution_coefficient)
             t2 = time.time()
             self.physics_time = t2 - t1
 
         t1 = time.time()
-        self.time_matrix, self.trail_sort, self.planet_update = self.update_vertices()
+        self.time_matrix, self.trail_sort, self.video, self.qube_data = self.update_vertices()
         t2 = time.time()
         self.drawing_time = t2 - t1
         self.frame_count += 1
         if self.frame_count == self.max_frame and self.get_vid:
             self.window.destroy()
+
+        print(f"draw={self.drawing_time: .4f}, rot={self.time_matrix: .4f}, planet={self.trail_sort: .4f}, dta/qube={self.qube_data: .4f}, calc={self.physics_time: .4f}, pos/velo={self.time_position: .4f}, force={self.time_interactions: .4f}, node={self.time_nodes: .4f}")
+
         
         self.window.id = self.window.after(self.timepause, self.update_system)
 
@@ -588,5 +649,23 @@ def Rz(theta):
   return np.matrix([[ math.cos(theta), -math.sin(theta), 0 ],
                    [ math.sin(theta), math.cos(theta) , 0 ],
                    [ 0           , 0            , 1 ]])
+def rgb_farben():
+    rgb_list = []
+    for i in range(round(255/2)):
+        b = 0+i
+        g = round((255/2)+i)
+        r = 255-i
+        rgb_list.append((r,g,b))
+    for i in range(round(255/2)):
+        b = round((255/2)+i)
+        g = 255-i
+        r = 0+i
+        rgb_list.append((r,g,b))
+    for i in range(round(255/2)):
+        b = 255-i
+        g = 0+i
+        r = round((255/2)+i)
+        rgb_list.append((r,g,b))
+    return rgb_list
 
 Interface()

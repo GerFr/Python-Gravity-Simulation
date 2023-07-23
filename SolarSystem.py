@@ -87,13 +87,10 @@ class SolarSystem:
             radius  = body.radius
             mass    = body.mass
             color   = body.color
-            last_pos= []
-            
-            for position in body.last_pos:
-                last_pos.append((position[0] - default_pos[0],
-                                 position[1] - default_pos[1],
-                                 position[2] - default_pos[2]))
-            all_data.append((name,pos,radius,mass,color,last_pos))
+            last_pos= [(position[0] - default_pos[0],
+                        position[1] - default_pos[1],
+                        position[2] - default_pos[2]) for position in body.last_pos]
+            all_data.append((name,pos,radius,mass,color,last_pos, body.velocity, body.acceleration, body.density, body.force))
 
 
         for cube in self.tree_nodes:
@@ -186,8 +183,8 @@ class SolarSystemBody:
         self.counter        = 0
         self.point_dist     = point_dist
         self.last_pos       = []
-        self.acceleration   = None
-        self.force          = None
+        self.acceleration   = [0,0,0]
+        self.force          = [0,0,0]
         self.solar_system.add_body(self)
 
         
