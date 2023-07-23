@@ -24,8 +24,8 @@ class Interface():
         self.pause          = False
         self.finished       = True
 
-        self.timestep       = 400
-        self.timepause      = 20
+        self.timestep       = 300
+        self.timepause      = 50
         
         self.absolute_pos   = True
 
@@ -34,9 +34,9 @@ class Interface():
         self.text_color     = "white"
         self.font           = ("Verdana",15, "normal")
 
-        self.draw_trail     = True
+        self.draw_trail     = False
         self.path_size      = .2
-        trail_length        = 600
+        trail_length        = 1000
         trail_resolution    = .2 #0-1
         self.trail_node_number   = int(trail_length * trail_resolution)
         self.trail_node_distance = int(trail_length / self.trail_node_number) #amount of calculations between each node
@@ -46,7 +46,7 @@ class Interface():
         
         
         
-        self.start_random   = False                 #mass,  radius, position,velocity,      color
+        self.start_random   = True                 #mass,  radius, position,velocity,      color
         self.starting_data = {'suns':    [('sun 1', 400000000, 30, (0, 0, 0), (0, 0,0), 'yellow')],
                               'planets': [('planet 1', 100000,  8, (-100, 0, -100), (0.01, 0, -0.01), 'lightgreen'),
                                           ('planet 2',  10000,  8, (-200, 0, -200), (0.007, 0, -0.007), 'green')]}
@@ -247,7 +247,7 @@ class Interface():
             self.mouse.clear()
             self.mouse.goto(self.width*-0.46, self.height*0.35)
             self.mouse.write(text, align="left", font=self.font)
-            self.fenster.update()
+            #self.fenster.update()
 
                     
     def draw_time(self,time):
@@ -256,7 +256,7 @@ class Interface():
         text = f"years: {times[0]}\ndays: {times[1]}\nhours: {times[2]}:{times[3]}:{times[4]}\ndrawing = {self.drawing_time}\n --> time/matrix = {self.time_matrix}\n --> trail/sort/planet = {self.trail_sort}\n --> update = {self.planet_update}\ncalculation = {self.physics_time}\n --> postition = {self.time_position}\n --> interactions = {self.time_interactions}\n --> velocity = {self.time_velocity}"
         self.time_pointer.clear()
         self.time_pointer.write(text, align="left", font=self.font)
-        self.fenster.update()
+        #self.fenster.update()
         
         
 
@@ -354,7 +354,7 @@ class Interface():
         t2b = time.time()
 
         t1c = time.time()
-        self.fenster.update()
+        #self.fenster.update()
         t2c = time.time()
 
         self.finished = True
