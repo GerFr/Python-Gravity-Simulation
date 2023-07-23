@@ -104,8 +104,8 @@ class Octree():
     def insert_to_node(self, node, particle):
         #check if point is in cuboid of present node
         if not node.in_bounds(particle.position):
-            print("error particle not in bounds")
-            print(f"middle: {node.middle}, dimension: {node.dimension}, particle position: {particle.position}, type: {type(particle)}")
+            #print("error particle not in bounds")
+            #print(f"middle: {node.middle}, dimension: {node.dimension}, particle position: {particle.position}, type: {type(particle)}")
             return
 
         #determine the appropriate child node

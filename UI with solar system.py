@@ -7,8 +7,13 @@ import time
 from SolarSystem import SolarSystem, Planet, Sun
 import numpy as np
 import random
+from PIL import ImageGrab
 
 #slider length factor einbauen
+#better vid production
+#fix bugs in relative movement barnes hut
+#upgrade ui, speed
+
 
 
 class Interface():
@@ -16,8 +21,10 @@ class Interface():
 
         self.fov_range      = (200, 4000, 2000)
         self.y_rot_range    = (-90, 90, 0)
-        self.default_dist   = 400
-        self.z_rotation     = 0 
+        self.default_dist   = 10000
+        self.z_rotation     = 0
+        self.frame_count    = 0
+        
 
         self.mouse_click1   = False
         self.mouse_click2   = False
@@ -47,17 +54,21 @@ class Interface():
 
         self.pointer_size   = 50
         self.onscreen       = []
+
+        #self.image_folder   = "C:/Users/gerri/Desktop/test_vid/imagedata/"
+        self.get_vid        = False
+        self.max_frame      = 2000
         
         
         self.start_random   = True                 #mass,  radius, position,velocity,      color
-        self.none_focus     = False
+        self.none_focus     = True
         self.starting_data = {'suns':    [('sun 1', 400000000, 30, (0, 0, 0), (0, 0,0), 'yellow')],
                               'planets': [('planet 1', 100000,  8, (-100, 0, -100), (0.01, 0, -0.01), 'lightgreen'),
                                           ('planet 2',  10000,  8, (-200, -100, -200), (0.007, 0, -0.007), 'green')]}
 
         #Values for random creation
-        self.number_stars   = 40
-        self.number_planets = 200 #trail resolution anpassen
+        self.number_stars   = 500
+        self.number_planets = 2000 #trail resolution anpassen
         self.planet_colors  = ["beige", "lightgreen", "lightblue"]
         self.sun_colors     = ["yellow","orange","red"]
         #distance range
@@ -90,7 +101,7 @@ class Interface():
     def setup_canvas(self):
         self.window = tkinter.Tk()
         self.window.title("Gravity Simulation")
-        #self.window.attributes("-fullscreen", True)
+        self.window.attributes("-fullscreen", True)
         window_size_tuple = self.window.maxsize()
         self.width = window_size_tuple[0]
         self.height= window_size_tuple[1]
@@ -138,6 +149,15 @@ class Interface():
         self.window.bind("<Right>", lambda event: self.switch_focus(event,"left"))
         self.window.bind("<Up>",    lambda event: self.switch_focus(event,"right"))
         self.window.bind("<Down>",  lambda event: self.switch_focus(event,"left"))
+
+    def getter(self, widget):
+        x=self.window.winfo_rootx()+widget.winfo_x()
+        y=self.window.winfo_rooty()+widget.winfo_y()
+        x1=x+widget.winfo_width()
+        y1=y+widget.winfo_height()
+        ImageGrab.grab().crop((x,y,x1,y1)).save(f"{self.image_folder}{self.frame_count}.gif")
+
+
 
     def switch_focus(self,event,direction):
         if direction == "left":
@@ -259,7 +279,7 @@ class Interface():
         times = ConvertSectoDay(self.solar_system.time)                                                                                                                                                         
         text = f"years: {times[0]}\ndays: {times[1]}\nhours: {times[2]}:{times[3]}:{times[4]}"
         
-        print(f"draw = {self.drawing_time: .4f},   rot = {self.time_matrix: .4f},   trail/planet = {self.trail_sort: .4f},   calc = {self.physics_time: .4f},   pos/velo = {self.time_position: .4f},   forces = {self.time_interactions: .4f}")#, impact ={self.time_velocity: .4f}, update ={self.planet_update: .4f}
+        #print(f"draw = {self.drawing_time: .4f},   rot = {self.time_matrix: .4f},   trail/planet = {self.trail_sort: .4f},   calc = {self.physics_time: .4f},   pos/velo = {self.time_position: .4f},   forces = {self.time_interactions: .4f}")#, impact ={self.time_velocity: .4f}, update ={self.planet_update: .4f}
         
         self.time_pointer.clear()
         self.time_pointer.write(text, align="left", font=self.font)
@@ -376,20 +396,24 @@ class Interface():
             radius      = body[2]
             color       = body[4]
             f           = body[6]
+            rad = radius*f
+            if rad <1:
+                rad =1
             self.pointer.goto(body_pos)
-            self.pointer.fd(radius*f)
+            self.pointer.fd(rad)
             self.pointer.left(90)
             self.pointer.fillcolor(color)
             self.pointer.pencolor(color)
             self.pointer.down()
             self.pointer.begin_fill()
-            self.pointer.circle(radius*f)
+            self.pointer.circle(rad)
             self.pointer.end_fill()
             self.pointer.up()
         t2b = time.time()
 
         t1c = time.time()
-        #self.fenster.update()
+        if self.get_vid:
+            self.getter(self.canvas)
         t2c = time.time()
 
         self.finished = True
@@ -427,7 +451,13 @@ class Interface():
             color = random.choice(self.planet_colors)
             self.starting_data["planets"] += [(name,mass,radius,position,velocity,color)]
             planets.append(Planet(self.solar_system,name,mass,radius,position,velocity,color,self.trail_node_number,self.trail_node_distance))
-        self.solar_system.set_focus(random.choice(suns))
+
+        if self.none_focus:
+            self.solar_system.set_focus(None)
+        else:
+            #sun with the biggest mass
+            suns.sort(key=lambda sun: sun.mass)
+            self.solar_system.set_focus(random.choice(suns))
         
 
     def setup_solar_system(self):
@@ -473,6 +503,9 @@ class Interface():
         self.time_matrix, self.trail_sort, self.planet_update = self.update_vertices()
         t2 = time.time()
         self.drawing_time = t2 - t1
+        self.frame_count += 1
+        if self.frame_count == self.max_frame and self.get_vid:
+            self.window.destroy()
         
         self.window.id = self.window.after(self.timepause, self.update_system)
 
