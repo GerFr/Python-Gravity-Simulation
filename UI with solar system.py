@@ -3,7 +3,7 @@
 import math
 import tkinter
 import turtle
-from time import sleep
+import time
 from SolarSystem import SolarSystem, Planet, Sun
 import numpy as np
 import random
@@ -23,25 +23,55 @@ class Interface():
         self.mouse_click3   = False
         self.pause          = False
         self.finished       = True
-        self.draw_trail     = True
+
+        self.timestep       = 400
+        self.timepause      = 20
+        
         self.absolute_pos   = True
 
         self.path_color     = "darkgrey"
         self.bg_color       = "black"
         self.text_color     = "white"
         self.font           = ("Verdana",15, "normal")
-        self.path_size      = .2
 
-        self.timestep       = 500
-        self.timepause      = 20
+        self.draw_trail     = True
+        self.path_size      = .2
+        trail_length        = 600
+        trail_resolution    = .2 #0-1
+        self.trail_node_number   = int(trail_length * trail_resolution)
+        self.trail_node_distance = int(trail_length / self.trail_node_number) #amount of calculations between each node
 
         self.pointer_size   = 50
         self.onscreen       = []
+        
+        
+        
+        self.start_random   = False                 #mass,  radius, position,velocity,      color
+        self.starting_data = {'suns':    [('sun 1', 400000000, 30, (0, 0, 0), (0, 0,0), 'yellow')],
+                              'planets': [('planet 1', 100000,  8, (-100, 0, -100), (0.01, 0, -0.01), 'lightgreen'),
+                                          ('planet 2',  10000,  8, (-200, 0, -200), (0.007, 0, -0.007), 'green')]}
 
-        self.number_stars   = 3
-        self.number_planets = 100
-        self.trail_length   = 50
+        #Values for random creation
+        self.number_stars   = 40
+        self.number_planets = 200 #trail resolution anpassen
+        self.planet_colors  = ["beige", "lightgreen", "lightblue"]
+        self.sun_colors     = ["yellow","orange","red"]
+        #distance range
+        #velo range
+        #mass star range
+        #mass planets range
+        #radius if density not implemented
 
+        
+        #Benchmarking        
+        self.physics_time       = None
+        self.drawing_time       = None
+        self.time_position      = None
+        self.time_interactions  = None
+        self.time_velocity      = None
+        self.time_matrix        = None
+        self.trail_sort         = None
+        self.planet_update      = None
         
 
         self.setup_canvas()
@@ -185,8 +215,9 @@ class Interface():
 
 
     def mouse_hover(self, event):
+        found = False
         if event != None:
-            found = False
+            
             x =  event.x-(self.width/2)
             y = -event.y+(self.height/2)-30
             for body in self.onscreen:
@@ -199,7 +230,7 @@ class Interface():
                     pos     = body[5]
                     radius  = body[2]
                     mass    = body[3]   
-        else:
+        elif self.solar_system.focused_body != None:
             found = True
             hover_body = self.solar_system.focused_body
             name    = hover_body.name
@@ -221,8 +252,8 @@ class Interface():
                     
     def draw_time(self,time):
         self.time_pointer.goto(self.width*-0.46, -self.height*0.42)
-        times = ConvertSectoDay(self.solar_system.time)
-        text = f"years: {times[0]}\ndays: {times[1]}\nhours: {times[2]}:{times[3]}:{times[4]}"
+        times = ConvertSectoDay(self.solar_system.time)                                                                                                                                                         
+        text = f"years: {times[0]}\ndays: {times[1]}\nhours: {times[2]}:{times[3]}:{times[4]}\ndrawing = {self.drawing_time}\n --> time/matrix = {self.time_matrix}\n --> trail/sort/planet = {self.trail_sort}\n --> update = {self.planet_update}\ncalculation = {self.physics_time}\n --> postition = {self.time_position}\n --> interactions = {self.time_interactions}\n --> velocity = {self.time_velocity}"
         self.time_pointer.clear()
         self.time_pointer.write(text, align="left", font=self.font)
         self.fenster.update()
@@ -237,7 +268,7 @@ class Interface():
         self.x_rotation = 0
         self.y_rotation = self.y_rot_range[2]
 
-        self.update_vertices()
+        #self.update_vertices()
         
 
 
@@ -284,16 +315,15 @@ class Interface():
 
 
     def update_vertices(self):
+        t1a = time.time()
         data = self.solar_system.get_data()
         self.draw_time(self.solar_system.time)
-
         self.rotation_matrix = Rx(math.radians(self.y_rotation-90)) * Ry(math.radians(self.z_rotation)) * Rz(math.radians(-self.x_rotation))
-
         self.finished = False
-
+        t2a = time.time()
+        
+        t1b = time.time()
         self.pointer.clear()
-
-
         self.onscreen = []
         for body in data:
             body_pos, f = self.get_screen_xy(*body[1])
@@ -302,41 +332,41 @@ class Interface():
             if body_pos != None:
                 self.onscreen.append((body[0], body_pos, body[2], body[3], body[4], body[1], f))
         self.onscreen.sort(key=lambda element: element[6])
+        
 
 
+        
         for body in self.onscreen:
             body_pos    = body[1]
             radius      = body[2]
-            mass        = body[3]
             color       = body[4]
             f           = body[6]
-
-            
-
             self.pointer.goto(body_pos)
             self.pointer.fd(radius*f)
             self.pointer.left(90)
             self.pointer.fillcolor(color)
             self.pointer.pencolor(color)
-            
             self.pointer.down()
             self.pointer.begin_fill()
             self.pointer.circle(radius*f)
             self.pointer.end_fill()
             self.pointer.up()
+        t2b = time.time()
 
-      
+        t1c = time.time()
         self.fenster.update()
+        t2c = time.time()
+
         self.finished = True
+        return t2a-t1a, t2b-t1b, t2c-t1c 
 
-
-
-    def setup_solar_system(self):
-        self.solar_system = SolarSystem()
+    def random_system(self):
+        self.starting_data = {}
         suns = []
+        self.starting_data["suns"] = []
         for i in range(self.number_stars):
-            name = "sun "+str(i)
-            mass = random.randint(100000,10000000)
+            name = "sun "+str(i+1)
+            mass = random.randint(100000,10000000)*100
             radius = random.randint(1,100)
             position =(random.randint(1,10000)-5000,
                        random.randint(1,10000)-5000,
@@ -344,12 +374,13 @@ class Interface():
             velocity = ((random.randint(0,2)-1)*10**(-random.randint(2,4)),
                        (random.randint(0,2)-1)*10**(-random.randint(2,4)),
                        (random.randint(0,2)-1)*10**(-random.randint(2,4)))
-            color = "yellow"
-            suns.append(Sun(self.solar_system,name= name,mass= mass,radius= radius,position= position, velocity= velocity,color= color,nr_pos= self.trail_length))
-
+            color = random.choice(self.sun_colors)
+            self.starting_data["suns"] += [(name,mass,radius,position,velocity,color)]
+            suns.append(Sun(self.solar_system,name,mass,radius,position,velocity,color,self.trail_node_number,self.trail_node_distance))
         planets = []
+        self.starting_data["planets"] = []
         for i in range(self.number_planets):
-            name = "planet "+str(i)
+            name = "planet "+str(i+1)
             mass = random.randint(1000,100000)
             radius = random.randint(1,100)/10
             position =(random.randint(1,10000)-5000,
@@ -358,12 +389,34 @@ class Interface():
             velocity = ((random.randint(0,2)-1)*10**(-random.randint(2,4)),
                        (random.randint(0,2)-1)*10**(-random.randint(2,4)),
                        (random.randint(0,2)-1)*10**(-random.randint(2,4)))
-            color = "lightgreen"
-            planets.append(Sun(self.solar_system,name= name,mass= mass,radius= radius,position= position, velocity= velocity,color= color,nr_pos= self.trail_length))
-
-            
-        
+            color = random.choice(self.planet_colors)
+            self.starting_data["planets"] += [(name,mass,radius,position,velocity,color)]
+            planets.append(Planet(self.solar_system,name,mass,radius,position,velocity,color,self.trail_node_number,self.trail_node_distance))
         self.solar_system.set_focus(random.choice(suns))
+        
+
+    def setup_solar_system(self):
+        self.solar_system = SolarSystem()
+
+        if self.start_random or self.starting_data == None:
+            self.random_system()
+
+        elif self.starting_data != None:
+            self.solar_system = SolarSystem()
+            suns =[]
+            planets = []
+            for bodytype in self.starting_data.keys():
+                for body in self.starting_data[bodytype]:
+                    if bodytype == "suns":
+                        suns.append(Sun(self.solar_system,body[0],body[1],body[2],body[3],body[4],body[5],self.trail_node_number, self.trail_node_distance))
+                    elif bodytype == "planets":
+                        planets.append(Planet(self.solar_system,body[0],body[1],body[2],body[3],body[4],body[5],self.trail_node_number, self.trail_node_distance))
+            self.solar_system.set_focus(suns[0])    
+
+        else:
+            print("no starting data")
+
+        print(self.starting_data)
         self.mouse_hover(None)
         self.solar_system.absolute_pos = self.absolute_pos
 
@@ -371,8 +424,16 @@ class Interface():
 
     def update_system(self):
         if not self.pause:
-            self.solar_system.calculate(self.timestep)
-        self.update_vertices()
+            t1 = time.time()
+            self.time_position, self.time_interactions, self.time_velocity = self.solar_system.calculate(self.timestep)
+            t2 = time.time()
+            self.physics_time = t2 - t1
+
+        t1 = time.time()
+        self.time_matrix, self.trail_sort, self.planet_update = self.update_vertices()
+        t2 = time.time()
+        self.drawing_time = t2 - t1
+        
         self.window.id = self.window.after(self.timepause, self.update_system)
 
 

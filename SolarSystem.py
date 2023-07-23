@@ -3,6 +3,7 @@
 import math
 import matplotlib.pyplot as plt
 from vectors import Vector3D
+import time
 
 
 
@@ -17,6 +18,7 @@ class SolarSystem:
         self.bodies = []
         self.focused_body = None
         self.absolute_pos = False
+        self.first = True
         self.time = 0
         
     def add_body(self, body):
@@ -33,11 +35,13 @@ class SolarSystem:
             self.focused_body = body
             
     def calculate(self, timestep):
-        for body in self.bodies:
-            if body.acceleration == None:
-                body.acceleration = body.gravitational_force()/body.mass
-
-
+        if self.first:
+            self.first = False
+            self.update_interactions()
+            for body in self.bodies:
+                body.acceleration = body.force/body.mass
+                
+        t1a = time.time()
         if self.focused_body != None: 
             self.focused_body.update_position(timestep)
             for body in self.bodies:
@@ -46,12 +50,22 @@ class SolarSystem:
         else:
             for body in self.bodies:
                 body.update_position(timestep)
+        t2a = time.time()
 
+        t1b = time.time()
+        self.update_interactions()
+        for body in self.destroyed:
+            self.remove_body(body)
+        t2b = time.time()
 
+        t1c = time.time()
         for body in self.bodies:
             body.update_velocity(timestep)
+        t2c =  time.time()
 
         self.time += timestep
+
+        return t2a - t1a, t2b - t1b, t2c - t1c
             
 
     def get_bodies(self):
@@ -59,14 +73,11 @@ class SolarSystem:
 
     
     def get_data(self):
-        
         all_data =[]
         if self.focused_body == None:
             default_pos = (0, 0, 0)
         else:
             default_pos = self.focused_body.position
-        
-            
         for body in self.bodies:
             name    = body.name
             pos     = (body.position[0] - default_pos[0],
@@ -76,14 +87,11 @@ class SolarSystem:
             mass    = body.mass
             color   = body.color
             last_pos= []
-
             for position in body.last_pos:
                 last_pos.append((position[0] - default_pos[0],
                                  position[1] - default_pos[1],
                                  position[2] - default_pos[2]))
-                
             all_data.append((name,pos,radius,mass,color,last_pos))
-
         return all_data
 
 
@@ -106,6 +114,20 @@ class SolarSystem:
     def clear_trail(self):
         for body in self.bodies:
             body.last_pos= []
+
+
+    def update_interactions(self):
+        for body in self.bodies:
+            body.force = Vector3D()
+
+        self.destroyed = []
+        for i, body in enumerate(self.bodies):
+            for other in self.bodies[i+1:]:
+                force, distance_mag = body.gravitational_force(other)
+                body.force += force
+                other.force -= force
+                self.destroyed += body.check_collision(other, distance_mag)
+                
             
 
 
@@ -114,7 +136,7 @@ class SolarSystem:
 
 class SolarSystemBody:
     
-    def __init__(self, solar_system, name, mass, radius, position=(0, 0, 0), velocity=(0, 0, 0), color = "black", nr_pos = 50):
+    def __init__(self, solar_system, name, mass, radius, position=(0, 0, 0), velocity=(0, 0, 0), color = "black", nr_pos = 50, point_dist = 10):
         
         self.solar_system   = solar_system
         self.name           = name 
@@ -123,19 +145,19 @@ class SolarSystemBody:
         self.velocity       = Vector3D(*velocity)
         self.color          = color
         self.radius         = radius
-        self.acceleration   = None
         self.nr_pos         = nr_pos
         self.counter        = 0
-        self.point_dist     = 10
+        self.point_dist     = point_dist
         self.last_pos       = []
+
+        self.acceleration   = None
+        self.force          = None
 
         
         self.solar_system.add_body(self)
 
         
     def update_position(self, timestep):
-        
-            
         self.position = (self.position[0] + (timestep* (self.velocity[0]+ timestep*self.acceleration[0]/2)),
                          self.position[1] + (timestep* (self.velocity[1]+ timestep*self.acceleration[1]/2)),
                          self.position[2] + (timestep* (self.velocity[2]+ timestep*self.acceleration[2]/2)))
@@ -155,38 +177,31 @@ class SolarSystemBody:
          
         
     def update_velocity(self, timestep):
-        newacc = self.gravitational_force()/self.mass
+        newacc = self.force/self.mass
         self.velocity += (self.acceleration + newacc) * timestep / 2
         self.acceleration = newacc
         
-##        if not self.solar_system.absolute_pos and self.solar_system.focused_body != None:
-##            self.velocity -= (self.solar_system.focused_body.acceleration + newacc) * timestep / 2
-            
-        
-        
-        
-            
-    def gravitational_force(self):
-        total_force = Vector3D()
-        for body in self.solar_system.bodies:
-            if body != self:
-                distance = Vector3D(*body.position) - Vector3D(*self.position)
-                distance_mag = distance.get_magnitude()
-                force_mag = 6.6743 * 10**(-11) * self.mass * body.mass / (distance_mag ** 2)
-                total_force += (distance.normalize() * force_mag)
-
-                self.check_collision(body, distance_mag)
-
-        return total_force
+             
+    def gravitational_force(self, body):
+        force = Vector3D()
+        distance = Vector3D(*body.position) - Vector3D(*self.position)
+        distance_mag = distance.get_magnitude()
+        force_mag = 6.6743 * 10**(-11) * self.mass * body.mass / (distance_mag ** 2)
+        force = (distance.normalize() * force_mag)
+        return force, distance_mag
         
 
     def check_collision(self, other, distance):
 ##        if isinstance(self, Planet) and isinstance(other, Planet):
-##            return#merge? lets do it! 
+##            return#merge? lets do it!
+
+        removed = []
         if distance < self.radius + other.radius:
             for body in self, other:
                 if isinstance(body, Planet):
-                    self.solar_system.remove_body(body)
+                    removed.append(body)
+        return removed
+                    
     
 
 #---------------------------------------------------------------------------------------------------------------------
@@ -202,9 +217,10 @@ class Sun(SolarSystemBody):
                  position   = (0, 0, 0),
                  velocity   = (0, 0, 0),
                  color      = "yellow",
-                 nr_pos     = 50):
+                 nr_pos     = 50,
+                 point_dist = 10):
         
-        super(Sun, self).__init__(solar_system, name, mass, radius, position, velocity, color, nr_pos)
+        super(Sun, self).__init__(solar_system, name, mass, radius, position, velocity, color, nr_pos, point_dist)
 
 
 class Planet(SolarSystemBody):
@@ -215,7 +231,8 @@ class Planet(SolarSystemBody):
                  position   = (0, 0, 0),
                  velocity   = (0, 0, 0),
                  color      = "blue",
-                 nr_pos     = 50):
+                 nr_pos     = 50,
+                 point_dist = 10):
         
-        super(Planet, self).__init__(solar_system, name, mass, radius, position, velocity, color, nr_pos)
+        super(Planet, self).__init__(solar_system, name, mass, radius, position, velocity, color, nr_pos, point_dist)
 
