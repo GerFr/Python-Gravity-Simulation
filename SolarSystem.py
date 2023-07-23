@@ -17,7 +17,7 @@ class SolarSystem:
     def __init__(self):
         self.bodies = []
         self.focused_body = None
-        self.absolute_pos = False
+        #self.absolute_pos = False
         self.first = True
         self.time = 0
         
@@ -130,10 +130,7 @@ class SolarSystem:
 
 
     def update_interactions(self, theta, restitution_coefficient):
-        if self.focused_body != None and not self.absolute_pos:
-            middle = self.focused_body.position
-        else:
-            middle = [0,0,0]
+        #middle = [0,0,0] always
 
         largest_val = 0
         furthest_bod = None
@@ -145,9 +142,8 @@ class SolarSystem:
                     largest_index = i
                     furthest_bod = bodie
                 
-       
-        dimension = math.sqrt(((furthest_bod.position[largest_index] - middle[largest_index])*2)**2)
-        root = Node(middle, dimension)
+        dimension = math.sqrt(((furthest_bod.position[largest_index])*2)**2)
+        root = Node([0,0,0], dimension)
         self.tree = Octree(self.bodies, root, theta)
         root.compute_mass_distribution()
         self.tree.update_forces_collisions()
@@ -200,11 +196,6 @@ class SolarSystemBody:
                          self.position[1] + (timestep* (self.velocity[1]+ timestep*self.acceleration[1]/2)),
                          self.position[2] + (timestep* (self.velocity[2]+ timestep*self.acceleration[2]/2)))
 
-        if not self.solar_system.absolute_pos and self.solar_system.focused_body != None:
-            self.position = (self.position[0] - (timestep* (self.solar_system.focused_body.velocity[0]+ timestep*self.solar_system.focused_body.acceleration[0]/2)),
-                             self.position[1] - (timestep* (self.solar_system.focused_body.velocity[1]+ timestep*self.solar_system.focused_body.acceleration[1]/2)),
-                             self.position[2] - (timestep* (self.solar_system.focused_body.velocity[2]+ timestep*self.solar_system.focused_body.acceleration[2]/2)))
-            
         self.counter += 1
         if self.counter == self.point_dist:
             self.last_pos.append(self.position)
@@ -238,7 +229,7 @@ class SolarSystemBody:
             self.mass += other.mass
             self.radius = self.calculate_radius()
             self.solar_system.destroyed.append(other)
-            print("inelastic collision")
+            #print("inelastic collision")
             
         else:
             #somewhat elastic collision

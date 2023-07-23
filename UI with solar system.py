@@ -6,11 +6,10 @@ import turtle
 import time
 from SolarSystem import SolarSystem, Planet, Sun
 import numpy as np
+import tinyarray as ta
 import random
 from PIL import ImageGrab
 
-#slider length factor einbauen
-#better vid production
 #fix bugs in relative movement barnes hut
 #upgrade ui, speed
 
@@ -23,7 +22,7 @@ class Interface():
 
         self.fov_range      = (200, 4000, 2000)
         self.y_rot_range    = (-90, 90, 0)
-        self.default_dist   = 10**12
+        self.default_dist   = 2.5*10**12
         self.z_rotation     = 0
         self.frame_count    = 0
         
@@ -34,13 +33,13 @@ class Interface():
         self.pause          = False
         self.finished       = True
 
-        self.timestep       = 18000 #5 min
-        self.timepause      = 50
+        self.timestep       = 60000 #in seconds, "simulation-time" per frame
+        self.timepause      = 50#pause between frames
         self.theta          = 1
-        self.restitution_coefficient = 1
+        self.restitution_coefficient = .5 #inelastic collisions, if 1 fully elastic if 0 merge of planets
         
-        self.absolute_pos   = True
-        self.none_focus     = True
+        self.none_focus     = False
+        #self.rigid_box      = False -> not implemented, could run faster
 
         self.path_color     = "darkgrey"
         self.bg_color       = "black"
@@ -51,7 +50,7 @@ class Interface():
         self.draw_trail     = False
         self.draw_box       = False
         self.path_size      = .2
-        trail_length        = 10000
+        trail_length        = 1000
         trail_resolution    = .5 #0-1
         self.trail_node_number   = int(trail_length * trail_resolution)
         self.trail_node_distance = int(trail_length / self.trail_node_number) #amount of calculations between each node
@@ -59,28 +58,30 @@ class Interface():
         self.pointer_size   = 50
         self.onscreen       = []
 
-        #self.image_folder   = "C:/Users/gerri/Desktop/test_vid/imagedata/"
+        self.image_folder   = "C:/Users/gerri/Desktop/data"
         self.get_vid        = False
-        self.max_frame      = 2000
+        self.max_frame      = 7200
+
+        self.rot_cube_pos = [500, -300]
+        self.rot_cube_scale = 50
+        self.rot_cube_color = "grey"
         
         
-        self.start_random   = True                 #mass,density, position,velocity,      color data from the web
+        self.start_random   = False                 #mass,density, position,velocity,      color data from the web
         self.starting_data  = {'suns':    [('sun 1', 1, 1.41, (0, 0, 0), (0, 0,0), 'yellow')],
-                              'planets': [('Earth', 3.003*10**(-6),  5.5, (-1, 0, 0), (0, 0, 1.992007*10**(-7)), 'lightgreen'),
-                                          ('Mercury',  1.651*10**(-7),  5.43, (-0.4, 0, 0), (0, 0, 3.1658205*10**(-7)), 'green')]}
+                              'planets': [('Earth', 3.003*10**(-6),  5.5, (-1, 0, 0), (0, 1.992007*10**(-7), 0), 'lightgreen'),
+                                          ('Mercury',  1.651*10**(-7),  5.43, (-0.4, 0, 0), (0, 3.1658205*10**(-7),0 ), 'green')]}
 
         #Values for random creation
-        self.size           = 4 #in au, len of cube size
-        self.max_velo       = 50000#2 #in 10^-10 AU/s
-        self.number_stars   = 100
+        self.size           = 20*10000000000 #in 10**(-10) au, len of cube size, has to be big number for randint
+        self.max_velo       = 5000#2 #in 10^-10 AU/s
+        self.number_stars   = 2500
         self.number_planets = 0 #trail resolution anpassen
         self.planet_colors  = ["beige", "lightgreen", "lightblue"]
         self.sun_colors     = ["yellow","orange","red"]
-        #distance range
-        #velo range
-        #mass star range
-        #mass planets range
-        #radius if density not implemented
+        
+        #mass ranges
+        #density ranges
 
         
         #Benchmarking        
@@ -160,7 +161,8 @@ class Interface():
         y=self.window.winfo_rooty()+widget.winfo_y()
         x1=x+widget.winfo_width()
         y1=y+widget.winfo_height()
-        ImageGrab.grab().crop((x,y,x1,y1)).save(f"{self.image_folder}{self.frame_count}.gif")
+        ImageGrab.grab().crop((x,y,x1,y1)).save(f"{self.image_folder}/frame_{self.frame_count}.gif")
+        print(self.frame_count)
 
 
 
@@ -169,8 +171,6 @@ class Interface():
             self.solar_system.switch_focus("previous")
         elif direction == "right":
             self.solar_system.switch_focus("next")
-        if not self.absolute_pos:
-            self.solar_system.clear_trail()
         self.mouse_hover(None)
         
     
@@ -212,8 +212,8 @@ class Interface():
             self.old_y = event.y
             self.mouse_click3 = True
         elif self.mouse_click3 and self.finished:
-            self.x_rotation += (event.x - self.old_x)/10
-            self.y_rotation -= (event.y - self.old_y)/10
+            self.y_rotation += (event.x - self.old_x)/10
+            self.x_rotation += (event.y - self.old_y)/10
             self.old_x = event.x
             self.old_y = event.y
 
@@ -230,7 +230,7 @@ class Interface():
             self.mouse_click1 = True
         elif self.mouse_click1 and self.finished:
             self.x_offset += (event.x - self.old_x)*self.distance/1000
-            self.y_offset -= (event.y - self.old_y)*self.distance/1000
+            self.y_offset += (event.y - self.old_y)*self.distance/1000
             self.old_x = event.x
             self.old_y = event.y
 
@@ -284,11 +284,10 @@ class Interface():
         times = ConvertSectoDay(self.solar_system.time)                                                                                                                                                         
         text = f"years: {times[0]}\ndays: {times[1]}\nhours: {times[2]}:{times[3]}:{times[4]}"
         
-        print(f"draw = {self.drawing_time: .4f},   rot = {self.time_matrix: .4f},   trail/planet = {self.trail_sort: .4f},   calc = {self.physics_time: .4f},   pos/velo = {self.time_position: .4f},   forces = {self.time_interactions: .4f}")#, impact ={self.time_velocity: .4f}, update ={self.planet_update: .4f}
+        #print(f"draw = {self.drawing_time: .4f},   rot = {self.time_matrix: .4f},   trail/planet = {self.trail_sort: .4f},   calc = {self.physics_time: .4f},   pos/velo = {self.time_position: .4f},   forces = {self.time_interactions: .4f}")#, impact ={self.time_velocity: .4f}, update ={self.planet_update: .4f}
         
         self.time_pointer.clear()
         self.time_pointer.write(text, align="left", font=self.font)
-        #self.fenster.update()
         
         
 
@@ -320,7 +319,7 @@ class Interface():
             if z > 0:
                 f = self.FOV / z
                 sx, sy = x * f, y * f
-                return (sx, sy), f
+                return (sx, -sy), f
             else:
                 return None, None
 
@@ -363,21 +362,64 @@ class Interface():
                 self.pointer.goto(pos2)
                 self.pointer.up()
 
+    def draw_rot_cube(self):
+        coord  =["X", "Y", "Z"]
+        fig = []
+        for point in [[self.rot_cube_scale,0,0],[0,self.rot_cube_scale,0],[0,0,self.rot_cube_scale]]:
+            line = []
+            for i in range(2):
+                if i == 0:
+                    default_pos = np.array([[point[0]],[point[1]],[point[2]]])
+                else:
+                    default_pos = np.array([[-point[0]],[-point[1]],[-point[2]]])
+                pos = self.rotation_matrix * default_pos
+                f = self.FOV / (pos[2,0]+(self.FOV))
+                sx, sy = (pos[0,0]*f)+self.rot_cube_pos[0], (-pos[1,0]*f)+self.rot_cube_pos[1]
+                line.append([[sx,sy], f])
+            fig.append(line)
+
+        self.pointer.pencolor(self.rot_cube_color)
+        for line in fig:
+            pos_fore = 0 
+            if line[0][1] >=1:  #positve side of axis in foreground, thicker border when drawing that side
+                pos_fore = 1
+            for n in range(2):
+                self.pointer.pensize(2+(4*pos_fore))
+                pos_fore = (pos_fore-1)*-1
+                self.pointer.goto(self.rot_cube_pos)
+                self.pointer.down()
+                self.pointer.goto(line[n][0])
+                self.pointer.up()
+
+        self.pointer.pencolor("white")
+        for i in range(len(fig)):
+            self.pointer.goto(fig[i][0][0])
+            self.pointer.write(coord[i], align="center", font=self.font)
+
+                
+            
+            
+
+        
+
             
             
         
-
 
     def update_vertices(self):
         t1a = time.time()
         data, nodes = self.solar_system.get_data()
         self.draw_time(self.solar_system.time)
-        self.rotation_matrix = Rx(math.radians(self.y_rotation-90)) * Ry(math.radians(self.z_rotation)) * Rz(math.radians(-self.x_rotation))
+        self.rotation_matrix = Rx(math.radians(self.x_rotation)) * Ry(math.radians(180-self.y_rotation)) * Rz(math.radians(180-self.z_rotation))
         self.finished = False
         t2a = time.time()
+
         
         t1b = time.time()
         self.pointer.clear()
+        
+        
+
         self.onscreen = []
         for body in data:
             body_pos, f = self.get_screen_xy(*body[1])
@@ -421,6 +463,10 @@ class Interface():
             self.getter(self.canvas)
         t2c = time.time()
 
+        self.draw_rot_cube()
+
+        
+
         self.finished = True
         return t2a-t1a, t2b-t1b, t2c-t1c 
 
@@ -436,9 +482,9 @@ class Interface():
             name = "sun "+str(i+1)
             mass = random.randint(1,1000)/100 #0.01-10
             density = random.randint(100,8000)/1000 #0.1-8
-            position =(random.randint(0,self.size)-(self.size/2),
-                       random.randint(0,self.size)-(self.size/2),
-                       random.randint(0,self.size)-(self.size/2))
+            position =((random.randint(0,self.size)-(self.size/2))*10**(-10),
+                       (random.randint(0,self.size)-(self.size/2))*10**(-10),
+                       (random.randint(0,self.size)-(self.size/2))*10**(-10))
             velocity = ((random.randint(0, self.max_velo)-(self.max_velo/2))*10**(-10),
                         (random.randint(0, self.max_velo)-(self.max_velo/2))*10**(-10),
                         (random.randint(0, self.max_velo)-(self.max_velo/2))*10**(-10))
@@ -452,9 +498,9 @@ class Interface():
             name = "planet "+str(i+1)
             mass = random.randint(1,100000)*10**(-7) #10**(-7) <--> 10**(-2)
             density = random.randint(100,10000)/1000
-            position =(random.randint(0,self.size)-(self.size/2),
-                       random.randint(0,self.size)-(self.size/2),
-                       random.randint(0,self.size)-(self.size/2))
+            position =((random.randint(0,self.size)-(self.size/2))*10**(-10),
+                       (random.randint(0,self.size)-(self.size/2))*10**(-10),
+                       (random.randint(0,self.size)-(self.size/2))*10**(-10))
             velocity = ((random.randint(0, self.max_velo)-(self.max_velo/2))*10**(-10),
                         (random.randint(0, self.max_velo)-(self.max_velo/2))*10**(-10),
                         (random.randint(0, self.max_velo)-(self.max_velo/2))*10**(-10))
@@ -493,12 +539,8 @@ class Interface():
 
         else:
             print("no starting data")
-
-        
-
         print(self.starting_data)
         self.mouse_hover(None)
-        self.solar_system.absolute_pos = self.absolute_pos
     
     
 
