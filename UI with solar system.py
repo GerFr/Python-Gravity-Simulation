@@ -29,14 +29,16 @@ class Interface():
         self.timepause      = 50
         self.theta          = 1
         
-        self.absolute_pos   = False
+        self.absolute_pos   = True
 
         self.path_color     = "darkgrey"
         self.bg_color       = "black"
         self.text_color     = "white"
         self.font           = ("Verdana",15, "normal")
+        self.cube_color     = "green"
 
-        self.draw_trail     = True
+        self.draw_trail     = False
+        self.draw_box       = False
         self.path_size      = .2
         trail_length        = 1000
         trail_resolution    = .5 #0-1
@@ -47,15 +49,15 @@ class Interface():
         self.onscreen       = []
         
         
-        
-        self.start_random   = False                 #mass,  radius, position,velocity,      color
+        self.start_random   = True                 #mass,  radius, position,velocity,      color
+        self.none_focus     = False
         self.starting_data = {'suns':    [('sun 1', 400000000, 30, (0, 0, 0), (0, 0,0), 'yellow')],
                               'planets': [('planet 1', 100000,  8, (-100, 0, -100), (0.01, 0, -0.01), 'lightgreen'),
-                                          ('planet 2',  10000,  8, (-200, 0, -200), (0.007, 0, -0.007), 'green')]}
+                                          ('planet 2',  10000,  8, (-200, -100, -200), (0.007, 0, -0.007), 'green')]}
 
         #Values for random creation
         self.number_stars   = 40
-        self.number_planets = 800 #trail resolution anpassen
+        self.number_planets = 200 #trail resolution anpassen
         self.planet_colors  = ["beige", "lightgreen", "lightblue"]
         self.sun_colors     = ["yellow","orange","red"]
         #distance range
@@ -88,7 +90,7 @@ class Interface():
     def setup_canvas(self):
         self.window = tkinter.Tk()
         self.window.title("Gravity Simulation")
-        self.window.attributes("-fullscreen", True)
+        #self.window.attributes("-fullscreen", True)
         window_size_tuple = self.window.maxsize()
         self.width = window_size_tuple[0]
         self.height= window_size_tuple[1]
@@ -257,7 +259,7 @@ class Interface():
         times = ConvertSectoDay(self.solar_system.time)                                                                                                                                                         
         text = f"years: {times[0]}\ndays: {times[1]}\nhours: {times[2]}:{times[3]}:{times[4]}"
         
-        #print(f"draw = {self.drawing_time: .4f},   rot = {self.time_matrix: .4f},   trail/planet = {self.trail_sort: .4f},   calc = {self.physics_time: .4f},   pos/velo = {self.time_position: .4f},   forces = {self.time_interactions: .4f}")#, impact ={self.time_velocity: .4f}, update ={self.planet_update: .4f}
+        print(f"draw = {self.drawing_time: .4f},   rot = {self.time_matrix: .4f},   trail/planet = {self.trail_sort: .4f},   calc = {self.physics_time: .4f},   pos/velo = {self.time_position: .4f},   forces = {self.time_interactions: .4f}")#, impact ={self.time_velocity: .4f}, update ={self.planet_update: .4f}
         
         self.time_pointer.clear()
         self.time_pointer.write(text, align="left", font=self.font)
@@ -318,10 +320,32 @@ class Interface():
                 
         self.pointer.up()
 
+    def draw_cube(self, qube):
+        for i in range(len(qube)):
+            qube[i] = self.get_screen_xy(*qube[i])
+            #qube[i] = {(sx,sy), f}
+        self.pointer.pencolor(self.cube_color)
+        
+        seiten = [(3,1),(1,0),(0,2),(2,3),(3,7),(7,6),(6,2),(4,6),(7,5),(5,1),(0,4),(4,5)]#die seiten des würfels ald index der qube liste
+        for seite in seiten:
+            pos1 = qube[seite[0]][0]
+            pos2 = qube[seite[1]][0]
+            if pos1 and pos2 != None:
+                f = (qube[seite[0]][1]+qube[seite[1]][1])/2
+                self.pointer.pensize(self.path_size*f/2)
+                self.pointer.goto(pos1)
+                self.pointer.down()
+                self.pointer.goto(pos2)
+                self.pointer.up()
+
+            
+            
+        
+
 
     def update_vertices(self):
         t1a = time.time()
-        data = self.solar_system.get_data()
+        data, nodes = self.solar_system.get_data()
         self.draw_time(self.solar_system.time)
         self.rotation_matrix = Rx(math.radians(self.y_rotation-90)) * Ry(math.radians(self.z_rotation)) * Rz(math.radians(-self.x_rotation))
         self.finished = False
@@ -332,11 +356,17 @@ class Interface():
         self.onscreen = []
         for body in data:
             body_pos, f = self.get_screen_xy(*body[1])
+            
             if self.draw_trail:
                 self.draw_last_pos(body[5])
+                
             if body_pos != None:
                 self.onscreen.append((body[0], body_pos, body[2], body[3], body[4], body[1], f))
         self.onscreen.sort(key=lambda element: element[6])
+
+        if self.draw_box:
+            for qube in nodes:
+                self.draw_cube(qube)
         
 
 
@@ -416,15 +446,20 @@ class Interface():
                         suns.append(Sun(self.solar_system,body[0],body[1],body[2],body[3],body[4],body[5],self.trail_node_number, self.trail_node_distance))
                     elif bodytype == "planets":
                         planets.append(Planet(self.solar_system,body[0],body[1],body[2],body[3],body[4],body[5],self.trail_node_number, self.trail_node_distance))
-            self.solar_system.set_focus(suns[0])    
+            if self.none_focus:
+                self.solar_system.set_focus(None)
+            else:
+                self.solar_system.set_focus(suns[0])
 
         else:
             print("no starting data")
 
+        
+
         print(self.starting_data)
         self.mouse_hover(None)
         self.solar_system.absolute_pos = self.absolute_pos
-
+    
     
 
     def update_system(self):
@@ -460,12 +495,10 @@ def Rx(theta):
   return np.matrix([[ 1, 0           , 0           ],
                    [ 0, math.cos(theta),-math.sin(theta)],
                    [ 0, math.sin(theta), math.cos(theta)]])
-  
 def Ry(theta):
   return np.matrix([[ math.cos(theta), 0, math.sin(theta)],
                    [ 0           , 1, 0           ],
                    [-math.sin(theta), 0, math.cos(theta)]])
-  
 def Rz(theta):
   return np.matrix([[ math.cos(theta), -math.sin(theta), 0 ],
                    [ math.sin(theta), math.cos(theta) , 0 ],

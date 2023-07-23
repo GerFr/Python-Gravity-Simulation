@@ -50,7 +50,10 @@ class SolarSystem:
         t1b = time.time()
         self.update_interactions(theta)
         t2b = time.time()
+        
         t1c = time.time()
+        self.tree_nodes = []
+        self.tree.get_all_nodes(self.tree.root_node,self.tree_nodes)
 ##        for body in self.destroyed:
 ##            self.remove_body(body)
         t2c = time.time()
@@ -85,7 +88,18 @@ class SolarSystem:
                                  position[1] - default_pos[1],
                                  position[2] - default_pos[2]))
             all_data.append((name,pos,radius,mass,color,last_pos))
-        return all_data
+
+
+        for cube in self.tree_nodes:
+            for point in cube:
+                point[0] -= default_pos[0]
+                point[1] -= default_pos[1]
+                point[2] -= default_pos[2]
+
+            
+
+                
+        return all_data, self.tree_nodes
 
 
     def switch_focus(self,direction):
@@ -110,34 +124,32 @@ class SolarSystem:
 
 
     def update_interactions(self, theta):
-        if self.focused_body.position != None:
+        if self.focused_body != None and not self.absolute_pos:
             middle = self.focused_body.position
         else:
-            middle = [0,0,0] 
+            middle = [0,0,0]
 
         largest_val = 0
         furthest_bod = None
         for bodie in self.bodies:
-            position = ta.array([*bodie.position])- ta.array([*middle])
-            distance = ta.dot(position,position)
-            if distance > largest_val:
-                largest_val = distance
-                furthest_bod = bodie
+            for i, val in enumerate(bodie.position):
+                dist_sqr = val**2
+                if dist_sqr > largest_val:
+                    largest_val = dist_sqr
+                    largest_index = i
+                    furthest_bod = bodie
                 
-        largest_val = 0
-        largest_index = 0
-        for i, val in enumerate(furthest_bod.position):
-            if val**2 > largest_val:
-                largest_val = val**2
-                largest_index = i
-
+       
+        
         dimension = math.sqrt(((furthest_bod.position[largest_index] - middle[largest_index])*2)**2)
-        #print(dimension)
         #print(middle)
+        
+            
         root = Node(middle, dimension)
         self.tree = Octree(self.bodies, root, theta)
         root.compute_mass_distribution()
         self.tree.setup_forces()
+        
 
 ##      self.destroyed = []
 ##      self.destroyed += body.check_collision(other, distance_mag)        

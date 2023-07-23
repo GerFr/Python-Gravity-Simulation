@@ -24,11 +24,20 @@ class Node():
     def get_subnode(self, quad):
         return(self.subnodes[quad[0]][quad[1]][quad[2]])
 
-    def create_subnode(self, quad):
-        middle = [self.middle[0]+((self.dimension/4)* 1*(-1*quad[0])), #quad[0] == 0: wert  1, rechts, positiver bereich
-                  self.middle[1]+((self.dimension/4)* 1*(-1*quad[1])), #quad[1] == 0: wert  1, vorne, nagativer bereich
-                  self.middle[2]+((self.dimension/4)* 1*(-1*quad[2]))] #quad[2] == 0: wert  1, oben, positiver bereich
+    def create_subnode(self, quad):#case 1,1,1
         dimension  = self.dimension/2
+        
+        x,y,z = 1,1,1
+        if quad[0] == 1:
+            x = -1
+        if quad[1] == 1:
+            y = -1
+        if quad[2] == 1:
+            z = -1
+            
+        middle = [self.middle[0]+((dimension/2)*x), #quad[0] == 0: wert  1, rechts, positiver bereich
+                  self.middle[1]+((dimension/2)*y), #quad[1] == 0: wert  1, vorne, nagativer bereich
+                  self.middle[2]+((dimension/2)*z)] #quad[2] == 0: wert  1, oben, positiver bereich
         node       = Node(middle, dimension)
         self.subnodes[quad[0]][quad[1]][quad[2]] = node
         self.nodes.append(node)
@@ -37,7 +46,7 @@ class Node():
         x,y,z = 1,1,1
         if point[0] > self.middle[0]:#rechts 
             x = 0
-        if point[1] >= self.middle[1]: #vorne #anscheinend muss das so sein trial and error eigl hätte ich andersrum bei y gemacht
+        if point[1] > self.middle[1]: #vorne #anscheinend muss das so sein trial and error eigl hätte ich andersrum bei y gemacht
             y = 0
         if point[2] > self.middle[2]: #oben
             z = 0
@@ -96,7 +105,7 @@ class Octree():
         #check if point is in cuboid of present node
         if not node.in_bounds(particle.position):
             print("error particle not in bounds")
-            print(f"middle: {node.middle}, dimension: {node.dimension}, particle position: {particle.position}")
+            print(f"middle: {node.middle}, dimension: {node.dimension}, particle position: {particle.position}, type: {type(particle)}")
             return
 
         #determine the appropriate child node
@@ -158,11 +167,41 @@ class Octree():
     
 
     def get_all_nodes(self, node, lst):#all point nodes, could include regional nodes
-        for subnode in node.nodes:
-            if subnode.particle == None and len(subnode.nodes) >= 1 or subnode.particle != None:
-                if len(subnode.nodes) >= 1:
-                    #lst.append(subnode.get_corners()) if regional are shown aswell
+        
+        if node.particle == None and len(node.nodes) >= 1 or node.particle != None:
+            if len(node.nodes) >= 1:
+                #lst.append(node.get_corners()) #if regional are shown aswell
+                for subnode in node.nodes:
                     self.get_all_nodes(subnode, lst)
-                if subnode.particle != None: 
-                    lst.append(subnode.get_corners())
+            if node.particle != None: 
+                lst.append(node.get_corners())
+
+if __name__ == "__main__":
+    from SolarSystem import Planet
+    planet1 = Planet
+    planet1.position = (10,20,30)
+    planet1.mass = 200
+
+    planet2 = Planet
+    planet2.position = (-10, -20, -30)
+    planet2.mass = 20
+    
+    data = [planet1,planet2]#, #planet2]
+    root = Node([0,0,0],100)
+    theta= 1
+    #tree = Octree(data, root , theta)
+    
+##    root.create_subnode([0,0,0]) #rechts vorne oben
+##    subnode = root.get_subnode([0,0,0])
+##    print(subnode.middle)
+##    print(subnode.get_corners())
+
+    print(root.in_bounds(planet2.position))
+    quad = root.get_quad(planet2.position)
+    print(quad)
+    root.create_subnode(quad)
+    subnode = root.get_subnode(quad)
+    print(subnode.middle)
+    print(subnode.get_corners())
+
     
