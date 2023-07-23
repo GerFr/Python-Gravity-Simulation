@@ -103,9 +103,9 @@ class Octree():
 
     def insert_to_node(self, node, particle):
         #check if point is in cuboid of present node
-        if not node.in_bounds(particle.position):
-            #print("error particle not in bounds")
-            #print(f"middle: {node.middle}, dimension: {node.dimension}, particle position: {particle.position}, type: {type(particle)}")
+        if not node.in_bounds(particle.position) and particle.position != self.root_node.middle:
+            print("error particle not in bounds")
+            print(f"middle: {node.middle}, dimension: {node.dimension}, particle position: {particle.position}, type: {type(particle)}")
             return
 
         #determine the appropriate child node
@@ -138,7 +138,9 @@ class Octree():
         for particle in self.particles:
             self.collision_dic[particle] = []
             particle.force = ta.array([0.,0.,0.])
-            self.calc_forces(self.root_node, particle)
+            particle.e_pot = 0
+            self.calc_forces(self.root_node, particle) 
+            particle.e_pot /= 1#2
 
             if len(self.collision_dic[particle]) == 0:
                 del self.collision_dic[particle]
@@ -150,8 +152,9 @@ class Octree():
     def calc_forces(self, node, particle):
         #Gravitational force and collision between two particles
         if node.particle != None and node.particle != particle:
-            force, distance = self.gravitational_force(particle,node,ta.array([]),ta.array([]))
+            force, e_pot, distance = self.gravitational_force(particle,node,ta.array([]),ta.array([]))
             particle.force -= force
+            particle.e_pot -= e_pot
             if distance < particle.radius + node.particle.radius and particle.mass > node.particle.mass:
                 self.collision_dic[particle].append(node.particle)
             
@@ -163,22 +166,14 @@ class Octree():
             r = math.sqrt(ta.dot(distance,distance))
             d = node.dimension
             if d/r < self.theta:
-                force, distance = self.gravitational_force(particle,node, distance, r)
+                force, e_pot, distance = self.gravitational_force(particle,node, distance, r)
                 particle.force -= force
+                particle.e_pot -= e_pot
             else:
                 for subnode in node.nodes:
                     self.calc_forces(subnode, particle)
                     
-    ##    def check_collision(self, other, distance):
-####        if isinstance(self, Planet) and isinstance(other, Planet):
-####            return#merge? lets do it!
-##
-##        removed = []
-##        if distance < self.radius + other.radius:
-##            for body in self, other:
-##                if isinstance(body, Planet):
-##                    removed.append(body)
-##        return removed
+
                     
     def gravitational_force(self, particle, node, distance_vec, distance_val):#can be ragional or point node
         force = ta.array([0.,0.,0.])
@@ -188,9 +183,13 @@ class Octree():
         else:
             distance = distance_vec
             distance_mag = distance_val
-        force_mag = 6.6743 * 10**(-11) * particle.mass * node.mass / ta.dot(distance,distance)
-        force = (distance/distance_mag * force_mag)
-        return force, distance_mag
+
+        G = 6.6743 * 10**(-11)
+        e_pot = G * particle.mass * node.mass/distance_mag
+        force_mag = G * particle.mass * node.mass / ta.dot(distance,distance)
+        force = (distance/distance_mag) * force_mag
+        
+        return force, e_pot, distance_mag
         
     
 
