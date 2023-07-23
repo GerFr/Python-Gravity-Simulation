@@ -1,7 +1,7 @@
 #tree has to be recreated for every step of the sim maybe sometimes it can be skipped
 #seems very expensive for python
 #calculate the tree every 5 steps or with multithreading, parrallel the previous tree is analyzed in the main thread and the new data is made to a new tree
-import tinyarray as ta
+import numpy as np
 import math
 
 class Node():
@@ -74,17 +74,17 @@ class Node():
     
     def compute_mass_distribution(self):
         if self.particle != None:
-            self.center_of_mass = ta.array([*self.particle.position])
+            self.center_of_mass = np.array([*self.particle.position])
             self.mass = self.particle.mass
         else:
             #Compute the center of mass based on the masses of all child quadrants and the center of mass as the center of mass of the child quadrants weightes with their mass
             self.mass = 0
-            self.center_of_mass = ta.array([0,0,0])
+            self.center_of_mass = np.array([0.,0.,0.])
             for node in self.nodes:
                 if node != None:
                     node.compute_mass_distribution()
                     self.mass += node.mass
-                    self.center_of_mass += node.mass*node.center_of_mass#is this correct? 
+                    self.center_of_mass += node.mass*node.center_of_mass #is this correct? 
             self.center_of_mass /= self.mass
             
       
@@ -137,7 +137,7 @@ class Octree():
         self.collision_dic = {}
         for particle in self.particles:
             self.collision_dic[particle] = []
-            particle.force = ta.array([0.,0.,0.])
+            particle.force = np.array([0.,0.,0.])
             particle.e_pot = 0
             self.calc_forces(self.root_node, particle) 
             particle.e_pot /= 1#2
@@ -152,7 +152,7 @@ class Octree():
     def calc_forces(self, node, particle):
         #Gravitational force and collision between two particles
         if node.particle != None and node.particle != particle:
-            force, e_pot, distance = self.gravitational_force(particle,node,ta.array([]),ta.array([]))
+            force, e_pot, distance = self.gravitational_force(particle,node,np.array([]),np.array([]))
             particle.force -= force
             particle.e_pot -= e_pot
             if distance < particle.radius + node.particle.radius and particle.mass > node.particle.mass:
@@ -161,9 +161,9 @@ class Octree():
             
             
         #find regional node were particle is not the center of mass (subnodes particle is particle)
-        elif node.particle == None and particle.position != node.center_of_mass:
-            distance = ta.array([*particle.position]) - ta.array([*node.center_of_mass])
-            r = math.sqrt(ta.dot(distance,distance))
+        elif node.particle == None and particle.position.all() != node.center_of_mass.all():
+            distance = np.array([*particle.position]) - np.array([*node.center_of_mass])
+            r = math.sqrt(np.dot(distance,distance))
             d = node.dimension
             if d/r < self.theta:
                 force, e_pot, distance = self.gravitational_force(particle,node, distance, r)
@@ -176,17 +176,17 @@ class Octree():
 
                     
     def gravitational_force(self, particle, node, distance_vec, distance_val):#can be ragional or point node
-        force = ta.array([0.,0.,0.])
+        force = np.array([0.,0.,0.])
         if len(distance_vec) == 0  and  len(distance_val) == 0:
-            distance = ta.array([*particle.position]) - ta.array([*node.center_of_mass])
-            distance_mag = math.sqrt(ta.dot(distance,distance))#magnitude(distance)#distance.get_magnitude()
+            distance = np.array([*particle.position]) - np.array([*node.center_of_mass])
+            distance_mag = math.sqrt(np.dot(distance,distance))#magnitude(distance)#distance.get_magnitude()
         else:
             distance = distance_vec
             distance_mag = distance_val
 
         G = 6.6743 * 10**(-11)
         e_pot = G * particle.mass * node.mass/distance_mag
-        force_mag = G * particle.mass * node.mass / ta.dot(distance,distance)
+        force_mag = G * particle.mass * node.mass / np.dot(distance,distance)
         force = (distance/distance_mag) * force_mag
         
         return force, e_pot, distance_mag

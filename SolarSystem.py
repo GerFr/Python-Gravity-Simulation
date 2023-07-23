@@ -1,7 +1,7 @@
 #SolarSystem.py
 #Gerrit Fritz
 import math
-import tinyarray as ta#from vectors import Vector3D
+import numpy as np#from vectors import Vector3D
 import time
 import random
 from BarnesHut import Octree, Node
@@ -31,7 +31,7 @@ class SolarSystem:
         self.total_ekin = 0
         self.total_epot = 0
         self.total_e = 0
-        self.cm_pos = ta.array([0,0,0])
+        self.cm_pos = np.array([0,0,0])
         self.cm_velo = None
         
         
@@ -104,7 +104,7 @@ class SolarSystem:
 
 
     def update_center_of_mass(self, timestep):
-        new_pos = ta.array(self.tree.root_node.center_of_mass)
+        new_pos = np.array(self.tree.root_node.center_of_mass)
         old_pos = self.cm_pos
         self.cm_velo = (new_pos-old_pos)/timestep
         self.cm_pos = new_pos
@@ -120,7 +120,7 @@ class SolarSystem:
         elif self.focus_type == "cm":
             pos = self.cm_pos
         else:
-            pos = ta.array([0, 0, 0])
+            pos = np.array([0, 0, 0])
         return pos
         
             
@@ -130,13 +130,14 @@ class SolarSystem:
 
         body_data =[]
         for body in self.bodies:
+            body_type = type(body)
             name    = body.name
             pos     = body.position - default_pos #array math
             radius  = body.radius
             mass    = body.mass
             color   = body.color
             trail= [position - default_pos for position in body.trail]
-            body_data.append((name,pos,radius,mass,color,trail, body.velocity, body.acceleration, body.density, body.force, body.e_kin, body.e_pot))
+            body_data.append((name,pos,radius,mass,color,trail, body.velocity, body.acceleration, body.density, body.force, body.e_kin, body.e_pot, body_type))
 
 
         for cube in self.tree_nodes:
@@ -148,6 +149,7 @@ class SolarSystem:
          
         
         system_data = [self.focus_type, self.focused_body, self.absolute_pos, self.theta, self.restitution_coefficient, self.total_ekin, self.total_epot, self.total_e, self.cm_pos, self.iteration, len(self.bodies), self.tree.root_node.middle, self.tree.root_node.dimension]        
+        
         return body_data, self.tree_nodes, system_data, self.cm_pos-default_pos
 
 
@@ -227,15 +229,15 @@ class SolarSystemBody:
         self.mass           = mass #mass in kg
         self.density        = density #density in g/cm^3
         self.radius         = self.calculate_radius()
-        self.position       = ta.array([*position])
-        self.velocity       = ta.array([*velocity]) 
+        self.position       = np.array([*position])
+        self.velocity       = np.array([*velocity]) 
         self.color          = color
         self.nr_pos         = nr_pos
         self.counter        = 0
         self.point_dist     = point_dist
         self.trail          = []
-        self.acceleration   = ta.array([0,0,0])
-        self.force          = ta.array([0,0,0])
+        self.acceleration   = np.array([0,0,0])
+        self.force          = np.array([0,0,0])
         self.e_pot          = 0
         self.e_kin          = 0
         self.solar_system.add_body(self)
@@ -263,7 +265,7 @@ class SolarSystemBody:
         newacc = self.force/self.mass
         self.velocity += (self.acceleration + newacc) * timestep / 2
         self.acceleration = newacc
-        self.e_kin = .5*self.mass*ta.dot(self.velocity,self.velocity)
+        self.e_kin = .5*self.mass*np.dot(self.velocity,self.velocity)
 
 
     def calculate_radius(self):

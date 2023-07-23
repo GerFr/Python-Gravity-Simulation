@@ -1,4 +1,4 @@
-#tkinter 3d gfx interface
+# tkinter 3d gfx interface
 
 import math
 import tkinter
@@ -6,15 +6,11 @@ import turtle
 import time
 from SolarSystem import SolarSystem, Planet, Sun
 import numpy as np
-import tinyarray as ta
 import random
 from PIL import ImageGrab
 
-#fix bugs in relative movement barnes hut
-#upgrade ui, speed
-
-
-
+# fix bugs in relative movement barnes hut
+# upgrade ui, speed
 
 
 class Interface():
@@ -28,7 +24,6 @@ class Interface():
 
         self.start_x_rot    = 0
         self.start_y_rot    = 0
-        
 
         self.mouse_click1   = False
         self.mouse_click2   = False
@@ -36,14 +31,14 @@ class Interface():
         self.pause          = False
         self.finished       = True
 
-        self.timestep       = 60000 #in seconds, "simulation-time" per frame
-        self.timepause      = 50#pause between frames
+        self.timestep       = 6000  # in seconds, "simulation-time" per frame
+        self.timepause      = 50    # pause between frames
         self.theta          = 1
-        self.restitution_coefficient = 0 #inelastic collisions, if 1 fully elastic if 0 merge of planets
+        self.restitution_coefficient = 0 # inelastic collisions, if 1 fully elastic if 0 merge of planets
 
 
-        self.absolute_pos   = True         
-        self.focus_index    = 0#["none","body","cm"] 0,1,2
+        self.absolute_pos   = False         
+        self.focus_index    = 1#["none","body","cm"] 0,1,2
         #self.rigid_box      = False -> not implemented, could run faster
 
         self.show_data      = False
@@ -55,20 +50,21 @@ class Interface():
         self.path_color     = "darkgrey"
         self.bg_color       = "black"
         self.text_color     = "white"
-        self.font           = ("Courier New",15, "normal")
+        self.font           = ("Courier New",15,"normal")
         self.cube_color     = "green"
 
-        self.body_size_factor = 1
-        self.min_body_size = 8
+        self.star_size_factor = 20
+        self.planet_size_factor = 800
+        self.min_body_size = .5
 
-        self.draw_box       = False
+        self.draw_box       = True
         self.draw_trail     = True
         self.path_size      = 1.5*10**9
-        self.trail_length        = 1000
+        self.trail_length   = 10000
         trail_resolution    = .5 #0-1
         self.path_planet_color = True
         self.start_thickness= 3
-        self.thickness_scale=.9
+        self.thickness_scale= 2/3
         
         self.trail_node_number   = int(self.trail_length * trail_resolution)
         self.trail_node_distance = int(self.trail_length / self.trail_node_number) #amount of calculations between each node
@@ -107,7 +103,7 @@ class Interface():
 ##        speed = 4*10**(-9)
 ##        size = 10**(-2)
 ##        self.starting_data = []
-##        weights = ta.array([5,8,5,8,5,8])
+##        weights = np.array([5,8,5,8,5,8])
 ##        offset = [.9995,1,1.0005,.9995,1,1.0005]
 ##        nr_systems = 500
 ##        for i in range(nr_systems):
@@ -160,25 +156,26 @@ class Interface():
         self.width = window_size_tuple[0]
         self.height= window_size_tuple[1]
 
-        upper_grid          = tkinter.Frame(self.window)
-        button_schließen    = tkinter.Button(upper_grid, text  = "leave", command = self.window.destroy)
-        self.pause_button   = tkinter.Button(upper_grid, text  = "pause", command = self.toggle_pause)
-        self.reset_button   = tkinter.Button(upper_grid, text  = "reset", command = self.reset)
-        self.canvas         = tkinter.Canvas(self.window, width = window_size_tuple[0], height = window_size_tuple[1])
-        upper_grid.pack             (side=tkinter.TOP, fill = tkinter.BOTH, expand = True)
-        button_schließen.grid       (column = 0, row = 0, sticky = tkinter.NSEW)
-        self.pause_button.grid      (column = 1, row = 0, sticky = tkinter.NSEW)
-        self.reset_button.grid      (column = 2, row = 0, sticky = tkinter.NSEW)
-        self.canvas.pack            (side=tkinter.TOP, fill = tkinter.BOTH, expand = True)
+        upper_grid        = tkinter.Frame(self.window)
+        button_schließen  = tkinter.Button(upper_grid, text="leave", command=self.window.destroy)
+        self.pause_button = tkinter.Button(upper_grid, text="pause", command=self.toggle_pause)
+        self.reset_button = tkinter.Button(upper_grid, text="reset", command=self.reset)
+        self.canvas       = tkinter.Canvas(self.window, width=window_size_tuple[0], height=window_size_tuple[1])
 
-        for i in range (3):
+        upper_grid.pack       (side=tkinter.TOP, fill=tkinter.BOTH, expand=True)
+        button_schließen.grid (column=0, row=0, sticky=tkinter.NSEW)
+        self.pause_button.grid(column=1, row=0, sticky=tkinter.NSEW)
+        self.reset_button.grid(column=2, row=0, sticky=tkinter.NSEW)
+        self.canvas.pack      (side=tkinter.TOP, fill=tkinter.BOTH, expand=True)
+
+        for i in range(3):
             tkinter.Grid.columnconfigure(upper_grid, i, weight=1)
 
         self.fenster = turtle.TurtleScreen(self.canvas)
         self.fenster.tracer(0)
         self.fenster.colormode(255)
         self.fenster.bgcolor(self.bg_color)
-        
+
         self.pointer = turtle.RawTurtle(self.fenster)
         self.pointer.ht()
         self.pointer.up()
@@ -192,52 +189,49 @@ class Interface():
         self.canvas.bind("<B1-Motion>", self.offset)
         self.canvas.bind("<B2-Motion>", self.change_fov)
         self.canvas.bind("<B3-Motion>", self.rotation)
+
         self.canvas.bind("<ButtonRelease-1>", lambda event: self.mouse_off(event, "b1"))
         self.canvas.bind("<ButtonRelease-2>", lambda event: self.mouse_off(event, "b2"))
         self.canvas.bind("<ButtonRelease-3>", lambda event: self.mouse_off(event, "b3"))
-        self.window.bind("<Left>",  lambda event: self.switch_focus(event,"right"))
-        self.window.bind("<Right>", lambda event: self.switch_focus(event,"left"))
-        self.window.bind("<Up>",    lambda event: self.switch_focus(event,"right"))
-        self.window.bind("<Down>",  lambda event: self.switch_focus(event,"left"))
+        self.window.bind("<Left>", lambda event: self.switch_focus(event, "right"))
+        self.window.bind("<Right>",lambda event: self.switch_focus(event, "left"))
+        self.window.bind("<Up>",   lambda event: self.switch_focus(event, "right"))
+        self.window.bind("<Down>", lambda event: self.switch_focus(event, "left"))
 
     def getter(self, widget):
-        x=self.window.winfo_rootx()+widget.winfo_x()
-        y=self.window.winfo_rooty()+widget.winfo_y()
-        x1=x+widget.winfo_width()
-        y1=y+widget.winfo_height()
-        ImageGrab.grab().crop((x,y,x1,y1)).save(f"{self.image_folder}/frame_{self.frame_count}.gif")
+        x = self.window.winfo_rootx() + widget.winfo_x()
+        y = self.window.winfo_rooty() + widget.winfo_y()
+        x1 = x + widget.winfo_width()
+        y1 = y + widget.winfo_height()
+        image = ImageGrab.grab().crop((x, y, x1, y1))
+        image.save(f"{self.image_folder}/frame_{self.frame_count}.gif")
         print(self.frame_count)
 
-
-
-    def switch_focus(self,event,direction):
+    def switch_focus(self, event, direction):
         if direction == "left":
             self.solar_system.switch_focus("previous")
         elif direction == "right":
             self.solar_system.switch_focus("next")
         if not self.absolute_pos and self.solar_system.focus_type == "body":
             self.solar_system.clear_trail()
-        
-    
+
     def toggle_pause(self):
-        if self.pause == False:
+        if not self.pause:
             self.pause = True
-            self.pause_button.config(text = "start")
+            self.pause_button.config(text="start")
         else:
             self.pause = False
-            self.pause_button.config(text = "pause")
-            
-            
-    def mouse_off(self,event, button):
+            self.pause_button.config(text="pause")
+
+    def mouse_off(self, event, button):
         if button == "b1":
             self.mouse_click1 = False
         elif button == "b2":
             self.mouse_click2 = False
         elif button == "b3":
             self.mouse_click3 = False
-        
 
-    def change_fov (self, event):
+    def change_fov(self, event):
         if not self.mouse_click2:
             self.old_y = event.y
             self.mouse_click2 = True
@@ -307,7 +301,7 @@ class Interface():
         
             vectors = [pos, velocity, acceleration, force]
             for i in range(len(vectors)):
-                vec_mag = math.sqrt(ta.dot(vectors[i],vectors[i]))
+                vec_mag = math.sqrt(np.dot(vectors[i],vectors[i]))
                 vectors[i] = f"mag:{vec_mag:.2e} vec:({vectors[i][0]:.2e},{vectors[i][1]:.2e},{vectors[i][2]:.2e})"
             text +=  f"""Name:         {name}\nRadius:       {radius:.2e}\nMass:         {mass:.2e}\nDensity:      {density}\nPosition:     {vectors[0]}\nVelocity:     {vectors[1]}\nAcceleration: {vectors[2]}\nForce:        {vectors[3]}\n"""
 
@@ -487,7 +481,7 @@ class Interface():
         t2a = time.time()
         self.pointer.clear()
         
-        #onscreen((name,pos,radius,mass,color,trail,velocity,acceleration,density,force,2dpos,f))
+        #onscreen((name,pos,radius,mass,color,trail,velocity,acceleration,density,force,2dpos,f,type))
         self.onscreen = []
         for system in self.solar_systems:
             self.solar_system = system
@@ -510,13 +504,23 @@ class Interface():
                     self.onscreen.append(data)
 
 
-        self.onscreen.sort(key=lambda element: element[11])#sort by f
+        self.onscreen.sort(key=lambda element: element[14])#sort by f
         for body in self.onscreen:
-            body_pos    = body[12]
+            body_pos    = body[13]
             radius      = body[2]
             color       = body[4]
-            f           = body[13]
-            rad = radius*f*self.body_size_factor
+            f           = body[14]
+            body_type   = body[12]
+
+            if body_type is Sun:
+                body_size_factor = self.star_size_factor
+            elif body_type is Planet:
+                body_size_factor = self.planet_size_factor
+            else:
+                body_size_factor = 1
+                print(f"No size indication for bodytype: {body_type}")
+
+            rad = radius*f*body_size_factor
             if rad <self.min_body_size:
                 rad =self.min_body_size
             self.draw_circle(self.pointer, body_pos, rad, color, color)
@@ -570,7 +574,7 @@ class Interface():
         if self.color_attribute in ["mass", "radius", "density"]:
             data.sort(key=lambda element:  element[dic[self.color_attribute]])
         elif not self.color_mode_abs and self.color_attribute in ["velocity","acceleration","force"]:
-            data.sort(key=lambda element:  math.sqrt(ta.dot(element[dic[self.color_attribute][0]],element[dic[self.color_attribute][0]])))#magnitude of vector
+            data.sort(key=lambda element:  math.sqrt(np.dot(element[dic[self.color_attribute][0]],element[dic[self.color_attribute][0]])))#magnitude of vector
 
         if not self.color_mode_abs or self.color_attribute in ["mass", "radius", "density"]:
             for i in  range(len(data)):
@@ -579,7 +583,7 @@ class Interface():
 
         else:
             for i in range(len(data)):
-                relative_index = math.sqrt(ta.dot(data[i][dic[self.color_attribute][0]],data[i][dic[self.color_attribute][0]]))/dic[self.color_attribute][1]
+                relative_index = math.sqrt(np.dot(data[i][dic[self.color_attribute][0]],data[i][dic[self.color_attribute][0]]))/dic[self.color_attribute][1]
                 index = int(len(self.rainbow_rgb)*relative_index)
                 if index > len(self.rainbow_rgb)-1:
                     index= len(self.rainbow_rgb)-1
