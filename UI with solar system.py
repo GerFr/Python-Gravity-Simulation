@@ -6,7 +6,7 @@ import turtle
 from time import sleep
 from SolarSystem import SolarSystem, Planet, Sun
 import numpy as np
-
+import random
 
 #slider length factor einbauen
 
@@ -24,19 +24,23 @@ class Interface():
         self.pause          = False
         self.finished       = True
         self.draw_trail     = True
-        self.absolute_pos   = False
+        self.absolute_pos   = True
 
         self.path_color     = "darkgrey"
         self.bg_color       = "black"
         self.text_color     = "white"
         self.font           = ("Verdana",15, "normal")
-        self.path_size      = .3
+        self.path_size      = .2
 
-        self.timestep       = 250
+        self.timestep       = 500
         self.timepause      = 20
 
         self.pointer_size   = 50
         self.onscreen       = []
+
+        self.number_stars   = 3
+        self.number_planets = 100
+        self.trail_length   = 50
 
         
 
@@ -192,7 +196,7 @@ class Interface():
                 if x > (pos_x - pointer_range) and x < (pos_x + pointer_range) and y > (pos_y - pointer_range) and y < (pos_y + pointer_range):
                     found = True
                     name    = body[0]
-                    pos     = body[7]
+                    pos     = body[5]
                     radius  = body[2]
                     mass    = body[3]   
         else:
@@ -293,9 +297,11 @@ class Interface():
         self.onscreen = []
         for body in data:
             body_pos, f = self.get_screen_xy(*body[1])
+            if self.draw_trail:
+                self.draw_last_pos(body[5])
             if body_pos != None:
-                self.onscreen.append((body[0], body_pos, body[2], body[3], body[4], body[5], f, body[1]))
-        self.onscreen.sort(key=lambda element: element[5])
+                self.onscreen.append((body[0], body_pos, body[2], body[3], body[4], body[1], f))
+        self.onscreen.sort(key=lambda element: element[6])
 
 
         for body in self.onscreen:
@@ -303,11 +309,9 @@ class Interface():
             radius      = body[2]
             mass        = body[3]
             color       = body[4]
-            last_pos    = body[5]
             f           = body[6]
 
-            if self.draw_trail:
-                self.draw_last_pos(last_pos)
+            
 
             self.pointer.goto(body_pos)
             self.pointer.fd(radius*f)
@@ -329,34 +333,37 @@ class Interface():
 
     def setup_solar_system(self):
         self.solar_system = SolarSystem()
-        sun1 = Sun(self.solar_system,
-                    name       = "sun1",
-                    mass       = 5864306,          
-                    radius     = 10,
-                    position   = (0, 0, 0),
-                    velocity   = (0, 0, 0),
-                    color      = "yellow",
-                    nr_pos     = 100)
-                
-        sun2 = Sun(self.solar_system,
-                    name       = "sun2",
-                    mass       = 5864306,          
-                    radius     = 10,
-                    position   = (100, -100, 100),
-                    velocity   = (10**(-4), 0, -10**(-2.9)),
-                    color      = "yellow",
-                    nr_pos     = 100)
-                
-        planet1 = (Planet(self.solar_system,
-                    name       = "planet1",
-                    mass       = 20943,
-                    radius     = 1,
-                    position   = (50, -50, 0), 
-                    velocity   = (-10**(-4), -10**(-4), -2*10**(-3)),
-                    color      = "lightgreen",
-                    nr_pos     = 100)
-                )
-        self.solar_system.set_focus(planet1)
+        suns = []
+        for i in range(self.number_stars):
+            name = "sun "+str(i)
+            mass = random.randint(100000,10000000)
+            radius = random.randint(1,100)
+            position =(random.randint(1,10000)-5000,
+                       random.randint(1,10000)-5000,
+                       random.randint(1,10000)-5000)
+            velocity = ((random.randint(0,2)-1)*10**(-random.randint(2,4)),
+                       (random.randint(0,2)-1)*10**(-random.randint(2,4)),
+                       (random.randint(0,2)-1)*10**(-random.randint(2,4)))
+            color = "yellow"
+            suns.append(Sun(self.solar_system,name= name,mass= mass,radius= radius,position= position, velocity= velocity,color= color,nr_pos= self.trail_length))
+
+        planets = []
+        for i in range(self.number_planets):
+            name = "planet "+str(i)
+            mass = random.randint(1000,100000)
+            radius = random.randint(1,100)/10
+            position =(random.randint(1,10000)-5000,
+                       random.randint(1,10000)-5000,
+                       random.randint(1,10000)-5000)
+            velocity = ((random.randint(0,2)-1)*10**(-random.randint(2,4)),
+                       (random.randint(0,2)-1)*10**(-random.randint(2,4)),
+                       (random.randint(0,2)-1)*10**(-random.randint(2,4)))
+            color = "lightgreen"
+            planets.append(Sun(self.solar_system,name= name,mass= mass,radius= radius,position= position, velocity= velocity,color= color,nr_pos= self.trail_length))
+
+            
+        
+        self.solar_system.set_focus(random.choice(suns))
         self.mouse_hover(None)
         self.solar_system.absolute_pos = self.absolute_pos
 
