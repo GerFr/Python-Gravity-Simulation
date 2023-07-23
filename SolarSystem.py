@@ -1,9 +1,9 @@
 #SolarSystem.py
 #Gerrit Fritz
 import math
-import tinyarray as np#from vectors import Vector3D
+import tinyarray as ta#from vectors import Vector3D
 import time
-
+from BarnesHut import Octree, Node
 
 
 
@@ -28,39 +28,33 @@ class SolarSystem:
         if body == self.focused_body:
             self.focused_body = None
 
-
     def set_focus (self, body):
         if body in self.bodies:
             self.focused_body = body
+
             
-    def calculate(self, timestep):
+    def calculate(self, timestep, theta):
         if self.first:
             self.first = False
-            self.update_interactions()
+            self.update_interactions(theta)
             for body in self.bodies:
                 body.acceleration = body.force/body.mass
                 
         t1a = time.time()
-        if self.focused_body != None: 
-            self.focused_body.update_position(timestep)
-            for body in self.bodies:
-                if body != self.focused_body:
-                    body.update_position(timestep)
-        else:
-            for body in self.bodies:
-                body.update_position(timestep)
-        t2a = time.time()
-
-        t1b = time.time()
-        self.update_interactions()
-        for body in self.destroyed:
-            self.remove_body(body)
-        t2b = time.time()
-
-        t1c = time.time()
         for body in self.bodies:
             body.update_velocity(timestep)
-        t2c =  time.time()
+            body.update_position(timestep)
+        t2a = time.time()
+        
+
+        t1b = time.time()
+        self.update_interactions(theta)
+        t2b = time.time()
+        t1c = time.time()
+##        for body in self.destroyed:
+##            self.remove_body(body)
+        t2c = time.time()
+        
 
         self.time += timestep
 
@@ -115,18 +109,38 @@ class SolarSystem:
             body.last_pos= []
 
 
-    def update_interactions(self):
-        for body in self.bodies:
-            body.force = np.array([0.,0.,0.])
+    def update_interactions(self, theta):
+        if self.focused_body.position != None:
+            middle = self.focused_body.position
+        else:
+            middle = [0,0,0] 
 
-        self.destroyed = []
-        for i, body in enumerate(self.bodies):
-            for other in self.bodies[i+1:]:
-                force, distance_mag = body.gravitational_force(other)
-                body.force += force
-                other.force -= force
-                self.destroyed += body.check_collision(other, distance_mag)
+        largest_val = 0
+        furthest_bod = None
+        for bodie in self.bodies:
+            position = ta.array([*bodie.position])- ta.array([*middle])
+            distance = ta.dot(position,position)
+            if distance > largest_val:
+                largest_val = distance
+                furthest_bod = bodie
                 
+        largest_val = 0
+        largest_index = 0
+        for i, val in enumerate(furthest_bod.position):
+            if val**2 > largest_val:
+                largest_val = val**2
+                largest_index = i
+
+        dimension = math.sqrt(((furthest_bod.position[largest_index] - middle[largest_index])*2)**2)
+        #print(dimension)
+        #print(middle)
+        root = Node(middle, dimension)
+        self.tree = Octree(self.bodies, root, theta)
+        root.compute_mass_distribution()
+        self.tree.setup_forces()
+
+##      self.destroyed = []
+##      self.destroyed += body.check_collision(other, distance_mag)        
             
 
 
@@ -141,7 +155,7 @@ class SolarSystemBody:
         self.name           = name 
         self.mass           = mass
         self.position       = position 
-        self.velocity       = np.array([*velocity]) 
+        self.velocity       = ta.array([*velocity]) 
         self.color          = color
         self.radius         = radius
         self.nr_pos         = nr_pos
@@ -173,33 +187,25 @@ class SolarSystemBody:
         
         if len(self.last_pos)> self.nr_pos:
             del self.last_pos[0]
-         
+             
         
     def update_velocity(self, timestep):
         newacc = self.force/self.mass
         self.velocity += (self.acceleration + newacc) * timestep / 2
         self.acceleration = newacc
         
-             
-    def gravitational_force(self, body):
-        force = np.array([0.,0.,0.])
-        distance = np.array([*body.position]) - np.array([*self.position])
-        distance_mag = math.sqrt(distance[0]**2 + distance[1]**2 + distance[2]**2)#distance.get_magnitude()
-        force_mag = 6.6743 * 10**(-11) * self.mass * body.mass / (distance_mag ** 2)
-        force = (distance/distance_mag * force_mag)
-        return force, distance_mag
         
 
-    def check_collision(self, other, distance):
-##        if isinstance(self, Planet) and isinstance(other, Planet):
-##            return#merge? lets do it!
-
-        removed = []
-        if distance < self.radius + other.radius:
-            for body in self, other:
-                if isinstance(body, Planet):
-                    removed.append(body)
-        return removed
+##    def check_collision(self, other, distance):
+####        if isinstance(self, Planet) and isinstance(other, Planet):
+####            return#merge? lets do it!
+##
+##        removed = []
+##        if distance < self.radius + other.radius:
+##            for body in self, other:
+##                if isinstance(body, Planet):
+##                    removed.append(body)
+##        return removed
                     
     
 
@@ -234,4 +240,5 @@ class Planet(SolarSystemBody):
                  point_dist = 10):
         
         super(Planet, self).__init__(solar_system, name, mass, radius, position, velocity, color, nr_pos, point_dist)
+
 

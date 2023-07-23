@@ -10,6 +10,7 @@ import random
 
 #slider length factor einbauen
 
+
 class Interface():
     def __init__(self):
 
@@ -26,6 +27,7 @@ class Interface():
 
         self.timestep       = 300
         self.timepause      = 50
+        self.theta          = 1
         
         self.absolute_pos   = False
 
@@ -37,7 +39,7 @@ class Interface():
         self.draw_trail     = True
         self.path_size      = .2
         trail_length        = 1000
-        trail_resolution    = .1 #0-1
+        trail_resolution    = .5 #0-1
         self.trail_node_number   = int(trail_length * trail_resolution)
         self.trail_node_distance = int(trail_length / self.trail_node_number) #amount of calculations between each node
 
@@ -46,14 +48,14 @@ class Interface():
         
         
         
-        self.start_random   = True                 #mass,  radius, position,velocity,      color
+        self.start_random   = False                 #mass,  radius, position,velocity,      color
         self.starting_data = {'suns':    [('sun 1', 400000000, 30, (0, 0, 0), (0, 0,0), 'yellow')],
                               'planets': [('planet 1', 100000,  8, (-100, 0, -100), (0.01, 0, -0.01), 'lightgreen'),
                                           ('planet 2',  10000,  8, (-200, 0, -200), (0.007, 0, -0.007), 'green')]}
 
         #Values for random creation
         self.number_stars   = 40
-        self.number_planets = 100 #trail resolution anpassen
+        self.number_planets = 800 #trail resolution anpassen
         self.planet_colors  = ["beige", "lightgreen", "lightblue"]
         self.sun_colors     = ["yellow","orange","red"]
         #distance range
@@ -64,14 +66,14 @@ class Interface():
 
         
         #Benchmarking        
-        self.physics_time       = None
-        self.drawing_time       = None
-        self.time_position      = None
-        self.time_interactions  = None
-        self.time_velocity      = None
-        self.time_matrix        = None
-        self.trail_sort         = None
-        self.planet_update      = None
+        self.physics_time       = 0
+        self.drawing_time       = 0
+        self.time_position      = 0
+        self.time_interactions  = 0
+        self.time_velocity      = 0
+        self.time_matrix        = 0
+        self.trail_sort         = 0
+        self.planet_update      = 0
         
 
         self.setup_canvas()
@@ -253,7 +255,10 @@ class Interface():
     def draw_time(self,time):
         self.time_pointer.goto(self.width*-0.46, -self.height*0.42)
         times = ConvertSectoDay(self.solar_system.time)                                                                                                                                                         
-        text = f"years: {times[0]}\ndays: {times[1]}\nhours: {times[2]}:{times[3]}:{times[4]}\ndrawing = {self.drawing_time}\n --> time/matrix = {self.time_matrix}\n --> trail/sort/planet = {self.trail_sort}\n --> update = {self.planet_update}\ncalculation = {self.physics_time}\n --> postition = {self.time_position}\n --> interactions = {self.time_interactions}\n --> velocity = {self.time_velocity}"
+        text = f"years: {times[0]}\ndays: {times[1]}\nhours: {times[2]}:{times[3]}:{times[4]}"
+        
+        #print(f"draw = {self.drawing_time: .4f},   rot = {self.time_matrix: .4f},   trail/planet = {self.trail_sort: .4f},   calc = {self.physics_time: .4f},   pos/velo = {self.time_position: .4f},   forces = {self.time_interactions: .4f}")#, impact ={self.time_velocity: .4f}, update ={self.planet_update: .4f}
+        
         self.time_pointer.clear()
         self.time_pointer.write(text, align="left", font=self.font)
         #self.fenster.update()
@@ -425,7 +430,7 @@ class Interface():
     def update_system(self):
         if not self.pause:
             t1 = time.time()
-            self.time_position, self.time_interactions, self.time_velocity = self.solar_system.calculate(self.timestep)
+            self.time_position, self.time_interactions, self.time_velocity = self.solar_system.calculate(self.timestep, self.theta)
             t2 = time.time()
             self.physics_time = t2 - t1
 
