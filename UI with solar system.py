@@ -5,6 +5,7 @@ import tkinter
 import turtle
 from time import sleep
 from SolarSystem import SolarSystem, Planet, Sun
+import numpy as np
 
 
 #slider length factor einbauen
@@ -13,10 +14,9 @@ class Interface():
     def __init__(self):
 
         self.fov_range      = (200, 4000, 2000)
-        self.x_rot_range    = (-360, 360, 0)
-        self.y_rot_range    = (-360, 360, 0)
+        self.y_rot_range    = (-90, 90, 0)
         self.default_dist   = 400
-        self.z_rotation = 0 #const
+        self.z_rotation     = 0 
 
         self.mouse_click1   = False
         self.mouse_click2   = False
@@ -26,21 +26,24 @@ class Interface():
         self.draw_trail     = True
         self.absolute_pos   = False
 
-        self.path_color = "darkgrey"
-        self.path_size  = .3
+        self.path_color     = "darkgrey"
+        self.bg_color       = "black"
+        self.text_color     = "white"
+        self.font           = ("Verdana",15, "normal")
+        self.path_size      = .3
 
-        self.timestep = 250
-        self.timepause = 20
+        self.timestep       = 250
+        self.timepause      = 20
 
-        self.pointer_size = 50        
+        self.pointer_size   = 50
+        self.onscreen       = []
+
+        
 
         self.setup_canvas()
         self.setup_solar_system()
-        
-        
         self.reset()
         self.window.id = self.window.after(self.timepause, self.update_system)
-
         self.window.mainloop()
         
 
@@ -51,6 +54,8 @@ class Interface():
         self.window.title("Gravity Simulation")
         self.window.attributes("-fullscreen", True)
         window_size_tuple = self.window.maxsize()
+        self.width = window_size_tuple[0]
+        self.height= window_size_tuple[1]
 
         upper_grid          = tkinter.Frame(self.window)
         button_schließen    = tkinter.Button(upper_grid, text  = "leave", command = self.window.destroy)
@@ -68,7 +73,7 @@ class Interface():
 
         self.fenster = turtle.TurtleScreen(self.canvas)
         self.fenster.tracer(0)
-        self.fenster.bgcolor("black")
+        self.fenster.bgcolor(self.bg_color)
         self.pointer = turtle.RawTurtle(self.fenster)
         self.pointer.ht()
         self.pointer.up()
@@ -76,15 +81,15 @@ class Interface():
         self.mouse = turtle.RawTurtle(self.fenster)
         self.mouse.up()
         self.mouse.ht()
-        self.mouse.color("white")
+        self.mouse.color(self.text_color)
 
         self.time_pointer = turtle.RawTurtle(self.fenster)
         self.time_pointer.up()
         self.time_pointer.ht()
-        self.time_pointer.color("white")
+        self.time_pointer.color(self.text_color)
 
         self.canvas.bind("<MouseWheel>", self.mouse_scroll)
-        self.canvas.bind("<Motion>", self.get_object)
+        self.canvas.bind("<Motion>", self.mouse_hover)
         self.canvas.bind("<B1-Motion>", self.offset)
         self.canvas.bind("<B2-Motion>", self.change_fov)
         self.canvas.bind("<B3-Motion>", self.rotation)
@@ -103,9 +108,9 @@ class Interface():
             self.solar_system.switch_focus("next")
         if not self.absolute_pos:
             self.solar_system.clear_trail()
+        self.mouse_hover(None)
         
     
-        
     def toggle_pause(self):
         if self.pause == False:
             self.pause = True
@@ -113,11 +118,8 @@ class Interface():
         else:
             self.pause = False
             self.pause_button.config(text = "pause")
-            self.window.id = self.window.after(self.timepause, self.update_system)
             
             
-
-        
     def mouse_off(self,event, button):
         if button == "b1":
             self.mouse_click1 = False
@@ -125,18 +127,12 @@ class Interface():
             self.mouse_click2 = False
         elif button == "b3":
             self.mouse_click3 = False
-
-        if self.pause_button.cget("text") == "pause":
-            self.pause = False
-            self.window.id = self.window.after(self.timepause, self.update_system)
-
-
+        
 
     def change_fov (self, event):
         if not self.mouse_click2:
             self.old_y = event.y
             self.mouse_click2 = True
-            self.pause = True
         elif self.mouse_click2 and self.finished:
             self.FOV -= (event.y - self.old_y)*10
             self.old_y = event.y
@@ -145,93 +141,86 @@ class Interface():
                 self.FOV = self.fov_range[0]
             elif self.FOV > self.fov_range[1]:
                 self.FOV = self.fov_range[1]
-            self.update_vertexes()
-            
 
-
+          
     def rotation(self, event):
         if not self.mouse_click3:
             self.old_x = event.x
             self.old_y = event.y
             self.mouse_click3 = True
-            self.pause = True
         elif self.mouse_click3 and self.finished:
             self.x_rotation += (event.x - self.old_x)/10
             self.y_rotation -= (event.y - self.old_y)/10
             self.old_x = event.x
             self.old_y = event.y
 
-            if self.x_rotation < self.x_rot_range[0]:
-                self.x_rotation = self.x_rot_range[0]
-            elif self.x_rotation > self.x_rot_range[1]:
-                self.x_rotation = self.x_rot_range[1]
-                
             if self.y_rotation < self.y_rot_range[0]:
                 self.y_rotation = self.y_rot_range[0]
             elif self.y_rotation > self.y_rot_range[1]:
                 self.y_rotation = self.y_rot_range[1]
-
-            self.update_vertexes()
-        
-
-
+            
 
     def offset(self, event):
         if not self.mouse_click1:
             self.old_x = event.x
             self.old_y = event.y
             self.mouse_click1 = True
-            self.pause = True
         elif self.mouse_click1 and self.finished:
             self.x_offset += (event.x - self.old_x)*self.distance/1000
             self.y_offset -= (event.y - self.old_y)*self.distance/1000
             self.old_x = event.x
             self.old_y = event.y
 
-            self.update_vertexes()
-        
-
       
     def mouse_scroll(self, event):
         self.distance -= (event.delta)*self.distance/1000
         if self.distance <0:
             self.distance = 0
-        self.update_vertexes()
-
-
-
-    def get_object(self, event):
-        width = self.window.maxsize()[0]
-        height= self.window.maxsize()[1]
-        x =  event.x-(width/2)
-        y = -event.y+(height/2)-30
         
-        for body in self.onscreen:
-            pos_x = body[1][0]
-            pos_y = body[1][1] 
-            pointer_range =  body[6]/10 * self.pointer_size
 
-            if x > (pos_x - pointer_range) and x < (pos_x + pointer_range) and y > (pos_y - pointer_range) and y < (pos_y + pointer_range):
-                
-                round_pos = []
-                for val in body[7]:
-                    round_pos.append(round(val))
-                text =  f"Name:     {body[0]}\nPosition: {round_pos}\nRadius:   {body[2]}\nMass:     {body[3]}"
 
-                self.mouse.clear()
-                self.mouse.goto(width*-0.46, height*0.26)
-                self.mouse.write(text, align="left", font=("Verdana",15, "normal"))
-                self.fenster.update()
-                
+
+    def mouse_hover(self, event):
+        if event != None:
+            found = False
+            x =  event.x-(self.width/2)
+            y = -event.y+(self.height/2)-30
+            for body in self.onscreen:
+                pos_x = body[1][0]
+                pos_y = body[1][1] 
+                pointer_range =  body[6]/10 * self.pointer_size
+                if x > (pos_x - pointer_range) and x < (pos_x + pointer_range) and y > (pos_y - pointer_range) and y < (pos_y + pointer_range):
+                    found = True
+                    name    = body[0]
+                    pos     = body[7]
+                    radius  = body[2]
+                    mass    = body[3]   
+        else:
+            found = True
+            hover_body = self.solar_system.focused_body
+            name    = hover_body.name
+            pos     = hover_body.position
+            radius  = hover_body.radius
+            mass    = hover_body.mass
+
+        if found:
+            round_pos = []
+            for val in pos:
+                round_pos.append(round(val))
+                    
+            text =  f"Name:     {name}\nPosition:  {round_pos}\nRadius:   {radius}\nMass:      {mass}"
+            self.mouse.clear()
+            self.mouse.goto(self.width*-0.46, self.height*0.35)
+            self.mouse.write(text, align="left", font=self.font)
+            self.fenster.update()
+
+                    
     def draw_time(self,time):
-        width = self.window.maxsize()[0]
-        height= self.window.maxsize()[1]
-        self.time_pointer.goto(width*-0.46, -height*0.42)
+        self.time_pointer.goto(self.width*-0.46, -self.height*0.42)
         times = ConvertSectoDay(self.solar_system.time)
         text = f"years: {times[0]}\ndays: {times[1]}\nhours: {times[2]}:{times[3]}:{times[4]}"
-        
         self.time_pointer.clear()
-        self.time_pointer.write(text, align="left", font=("Verdana",15, "normal"))
+        self.time_pointer.write(text, align="left", font=self.font)
         self.fenster.update()
         
         
@@ -241,24 +230,20 @@ class Interface():
         self.distance   = self.default_dist
         self.x_offset   = 0
         self.y_offset   = 0
-        self.x_rotation = self.x_rot_range[2]
+        self.x_rotation = 0
         self.y_rotation = self.y_rot_range[2]
 
-        self.update_vertexes()
+        self.update_vertices()
         
-
-    
-
-
-    def rotate(self, x, y, r):
-      s, c = math.sin(math.radians(r)), math.cos(math.radians(r))
-      return x * c - y * s, x * s + y * c
 
 
     def get_screen_xy(self,x,y,z):
-            y, z = self.rotate(y, z, self.y_rotation-90)
-            x, z = self.rotate(x, z, self.x_rotation)
-            x, y = self.rotate(x, y, self.z_rotation)
+            default_pos = np.array([[x],[y],[z]])
+            pos = self.rotation_matrix * default_pos
+
+            x = pos[0,0]
+            y = pos[1,0]
+            z = pos[2,0]
             
             real_dist = self.distance*(self.FOV/1000) 
             x += self.x_offset
@@ -294,12 +279,16 @@ class Interface():
         self.pointer.up()
 
 
-    def update_vertexes(self):
+    def update_vertices(self):
         data = self.solar_system.get_data()
         self.draw_time(self.solar_system.time)
-        
+
+        self.rotation_matrix = Rx(math.radians(self.y_rotation-90)) * Ry(math.radians(self.z_rotation)) * Rz(math.radians(-self.x_rotation))
+
         self.finished = False
+
         self.pointer.clear()
+
 
         self.onscreen = []
         for body in data:
@@ -320,8 +309,6 @@ class Interface():
             if self.draw_trail:
                 self.draw_last_pos(last_pos)
 
-            
-
             self.pointer.goto(body_pos)
             self.pointer.fd(radius*f)
             self.pointer.left(90)
@@ -334,7 +321,7 @@ class Interface():
             self.pointer.end_fill()
             self.pointer.up()
 
-  
+      
         self.fenster.update()
         self.finished = True
 
@@ -370,6 +357,7 @@ class Interface():
                     nr_pos     = 100)
                 )
         self.solar_system.set_focus(planet1)
+        self.mouse_hover(None)
         self.solar_system.absolute_pos = self.absolute_pos
 
     
@@ -377,8 +365,8 @@ class Interface():
     def update_system(self):
         if not self.pause:
             self.solar_system.calculate(self.timestep)
-            self.update_vertexes()
-            self.window.id = self.window.after(self.timepause, self.update_system)
+        self.update_vertices()
+        self.window.id = self.window.after(self.timepause, self.update_system)
 
 
 def ConvertSectoDay(n):
@@ -393,5 +381,21 @@ def ConvertSectoDay(n):
     seconds = n
 	
     return (year,day,hour,minutes,seconds)
+
+
+def Rx(theta):
+  return np.matrix([[ 1, 0           , 0           ],
+                   [ 0, math.cos(theta),-math.sin(theta)],
+                   [ 0, math.sin(theta), math.cos(theta)]])
+  
+def Ry(theta):
+  return np.matrix([[ math.cos(theta), 0, math.sin(theta)],
+                   [ 0           , 1, 0           ],
+                   [-math.sin(theta), 0, math.cos(theta)]])
+  
+def Rz(theta):
+  return np.matrix([[ math.cos(theta), -math.sin(theta), 0 ],
+                   [ math.sin(theta), math.cos(theta) , 0 ],
+                   [ 0           , 0            , 1 ]])
 
 Interface()
