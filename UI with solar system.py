@@ -16,12 +16,14 @@ from PIL import ImageGrab
 
 
 
+
+
 class Interface():
     def __init__(self):
 
         self.fov_range      = (200, 4000, 2000)
         self.y_rot_range    = (-90, 90, 0)
-        self.default_dist   = 10000
+        self.default_dist   = 10**12
         self.z_rotation     = 0
         self.frame_count    = 0
         
@@ -32,11 +34,13 @@ class Interface():
         self.pause          = False
         self.finished       = True
 
-        self.timestep       = 300
+        self.timestep       = 18000 #5 min
         self.timepause      = 50
         self.theta          = 1
+        self.restitution_coefficient = 1
         
         self.absolute_pos   = True
+        self.none_focus     = True
 
         self.path_color     = "darkgrey"
         self.bg_color       = "black"
@@ -47,7 +51,7 @@ class Interface():
         self.draw_trail     = False
         self.draw_box       = False
         self.path_size      = .2
-        trail_length        = 1000
+        trail_length        = 10000
         trail_resolution    = .5 #0-1
         self.trail_node_number   = int(trail_length * trail_resolution)
         self.trail_node_distance = int(trail_length / self.trail_node_number) #amount of calculations between each node
@@ -60,15 +64,16 @@ class Interface():
         self.max_frame      = 2000
         
         
-        self.start_random   = True                 #mass,  radius, position,velocity,      color
-        self.none_focus     = True
-        self.starting_data = {'suns':    [('sun 1', 400000000, 30, (0, 0, 0), (0, 0,0), 'yellow')],
-                              'planets': [('planet 1', 100000,  8, (-100, 0, -100), (0.01, 0, -0.01), 'lightgreen'),
-                                          ('planet 2',  10000,  8, (-200, -100, -200), (0.007, 0, -0.007), 'green')]}
+        self.start_random   = True                 #mass,density, position,velocity,      color data from the web
+        self.starting_data  = {'suns':    [('sun 1', 1, 1.41, (0, 0, 0), (0, 0,0), 'yellow')],
+                              'planets': [('Earth', 3.003*10**(-6),  5.5, (-1, 0, 0), (0, 0, 1.992007*10**(-7)), 'lightgreen'),
+                                          ('Mercury',  1.651*10**(-7),  5.43, (-0.4, 0, 0), (0, 0, 3.1658205*10**(-7)), 'green')]}
 
         #Values for random creation
-        self.number_stars   = 500
-        self.number_planets = 2000 #trail resolution anpassen
+        self.size           = 4 #in au, len of cube size
+        self.max_velo       = 50000#2 #in 10^-10 AU/s
+        self.number_stars   = 100
+        self.number_planets = 0 #trail resolution anpassen
         self.planet_colors  = ["beige", "lightgreen", "lightblue"]
         self.sun_colors     = ["yellow","orange","red"]
         #distance range
@@ -279,7 +284,7 @@ class Interface():
         times = ConvertSectoDay(self.solar_system.time)                                                                                                                                                         
         text = f"years: {times[0]}\ndays: {times[1]}\nhours: {times[2]}:{times[3]}:{times[4]}"
         
-        #print(f"draw = {self.drawing_time: .4f},   rot = {self.time_matrix: .4f},   trail/planet = {self.trail_sort: .4f},   calc = {self.physics_time: .4f},   pos/velo = {self.time_position: .4f},   forces = {self.time_interactions: .4f}")#, impact ={self.time_velocity: .4f}, update ={self.planet_update: .4f}
+        print(f"draw = {self.drawing_time: .4f},   rot = {self.time_matrix: .4f},   trail/planet = {self.trail_sort: .4f},   calc = {self.physics_time: .4f},   pos/velo = {self.time_position: .4f},   forces = {self.time_interactions: .4f}")#, impact ={self.time_velocity: .4f}, update ={self.planet_update: .4f}
         
         self.time_pointer.clear()
         self.time_pointer.write(text, align="left", font=self.font)
@@ -420,37 +425,42 @@ class Interface():
         return t2a-t1a, t2b-t1b, t2c-t1c 
 
     def random_system(self):
+        '''{'suns':    [('sun 1', 1, 1.41, (0, 0, 0), (0, 0,0), 'yellow')],
+            'planets': [('Earth', 3.003*10**(-6),  5.5, (-1, 0, 0), (0, 0, 1.992007*10**(-7)), 'lightgreen'),
+                        ('Mercury',  1.651*10**(-7),  5.43, (-0.4, 0, 0), (0, 0, 3.1658205*10**(-7)), 'green')]}'''
+          
         self.starting_data = {}
         suns = []
         self.starting_data["suns"] = []
         for i in range(self.number_stars):
             name = "sun "+str(i+1)
-            mass = random.randint(100000,10000000)*100
-            radius = random.randint(1,100)
-            position =(random.randint(1,10000)-5000,
-                       random.randint(1,10000)-5000,
-                       random.randint(1,10000)-5000)
-            velocity = ((random.randint(0,2)-1)*10**(-random.randint(2,4)),
-                       (random.randint(0,2)-1)*10**(-random.randint(2,4)),
-                       (random.randint(0,2)-1)*10**(-random.randint(2,4)))
+            mass = random.randint(1,1000)/100 #0.01-10
+            density = random.randint(100,8000)/1000 #0.1-8
+            position =(random.randint(0,self.size)-(self.size/2),
+                       random.randint(0,self.size)-(self.size/2),
+                       random.randint(0,self.size)-(self.size/2))
+            velocity = ((random.randint(0, self.max_velo)-(self.max_velo/2))*10**(-10),
+                        (random.randint(0, self.max_velo)-(self.max_velo/2))*10**(-10),
+                        (random.randint(0, self.max_velo)-(self.max_velo/2))*10**(-10))
             color = random.choice(self.sun_colors)
-            self.starting_data["suns"] += [(name,mass,radius,position,velocity,color)]
-            suns.append(Sun(self.solar_system,name,mass,radius,position,velocity,color,self.trail_node_number,self.trail_node_distance))
+            self.starting_data["suns"] += [(name,mass,density,position,velocity,color)]
+            suns.append(Sun(self.solar_system,name,mass,density,position,velocity,color,self.trail_node_number,self.trail_node_distance))
+
         planets = []
         self.starting_data["planets"] = []
         for i in range(self.number_planets):
             name = "planet "+str(i+1)
-            mass = random.randint(1000,100000)
-            radius = random.randint(1,100)/10
-            position =(random.randint(1,10000)-5000,
-                       random.randint(1,10000)-5000,
-                       random.randint(1,10000)-5000)
-            velocity = ((random.randint(0,2)-1)*10**(-random.randint(2,4)),
-                       (random.randint(0,2)-1)*10**(-random.randint(2,4)),
-                       (random.randint(0,2)-1)*10**(-random.randint(2,4)))
+            mass = random.randint(1,100000)*10**(-7) #10**(-7) <--> 10**(-2)
+            density = random.randint(100,10000)/1000
+            position =(random.randint(0,self.size)-(self.size/2),
+                       random.randint(0,self.size)-(self.size/2),
+                       random.randint(0,self.size)-(self.size/2))
+            velocity = ((random.randint(0, self.max_velo)-(self.max_velo/2))*10**(-10),
+                        (random.randint(0, self.max_velo)-(self.max_velo/2))*10**(-10),
+                        (random.randint(0, self.max_velo)-(self.max_velo/2))*10**(-10))
             color = random.choice(self.planet_colors)
-            self.starting_data["planets"] += [(name,mass,radius,position,velocity,color)]
-            planets.append(Planet(self.solar_system,name,mass,radius,position,velocity,color,self.trail_node_number,self.trail_node_distance))
+            self.starting_data["planets"] += [(name,mass,density,position,velocity,color)]
+            planets.append(Planet(self.solar_system,name,mass,density,position,velocity,color,self.trail_node_number,self.trail_node_distance))
 
         if self.none_focus:
             self.solar_system.set_focus(None)
@@ -495,7 +505,7 @@ class Interface():
     def update_system(self):
         if not self.pause:
             t1 = time.time()
-            self.time_position, self.time_interactions, self.time_velocity = self.solar_system.calculate(self.timestep, self.theta)
+            self.time_position, self.time_interactions, self.time_velocity = self.solar_system.calculate(self.timestep, self.theta, self.restitution_coefficient)
             t2 = time.time()
             self.physics_time = t2 - t1
 
