@@ -46,7 +46,7 @@ class Interface():
         
         
         
-        self.start_random   = False                 #mass,  radius, position,velocity,      color
+        self.start_random   = True                 #mass,  radius, position,velocity,      color
         self.starting_data = {'suns':    [('sun 1', 400000000, 30, (0, 0, 0), (0, 0,0), 'yellow')],
                               'planets': [('planet 1', 100000,  8, (-100, 0, -100), (0.01, 0, -0.01), 'lightgreen'),
                                           ('planet 2',  10000,  8, (-200, 0, -200), (0.007, 0, -0.007), 'green')]}
