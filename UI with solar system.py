@@ -27,17 +27,17 @@ class Interface():
         self.timestep       = 300
         self.timepause      = 50
         
-        self.absolute_pos   = True
+        self.absolute_pos   = False
 
         self.path_color     = "darkgrey"
         self.bg_color       = "black"
         self.text_color     = "white"
         self.font           = ("Verdana",15, "normal")
 
-        self.draw_trail     = False
+        self.draw_trail     = True
         self.path_size      = .2
         trail_length        = 1000
-        trail_resolution    = .2 #0-1
+        trail_resolution    = .1 #0-1
         self.trail_node_number   = int(trail_length * trail_resolution)
         self.trail_node_distance = int(trail_length / self.trail_node_number) #amount of calculations between each node
 
@@ -46,14 +46,14 @@ class Interface():
         
         
         
-        self.start_random   = True                 #mass,  radius, position,velocity,      color
+        self.start_random   = False                 #mass,  radius, position,velocity,      color
         self.starting_data = {'suns':    [('sun 1', 400000000, 30, (0, 0, 0), (0, 0,0), 'yellow')],
                               'planets': [('planet 1', 100000,  8, (-100, 0, -100), (0.01, 0, -0.01), 'lightgreen'),
                                           ('planet 2',  10000,  8, (-200, 0, -200), (0.007, 0, -0.007), 'green')]}
 
         #Values for random creation
         self.number_stars   = 40
-        self.number_planets = 200 #trail resolution anpassen
+        self.number_planets = 100 #trail resolution anpassen
         self.planet_colors  = ["beige", "lightgreen", "lightblue"]
         self.sun_colors     = ["yellow","orange","red"]
         #distance range
@@ -130,8 +130,8 @@ class Interface():
         self.canvas.bind("<ButtonRelease-1>", lambda event: self.mouse_off(event, "b1"))
         self.canvas.bind("<ButtonRelease-2>", lambda event: self.mouse_off(event, "b2"))
         self.canvas.bind("<ButtonRelease-3>", lambda event: self.mouse_off(event, "b3"))
-        self.window.bind("<Left>",  lambda event: self.switch_focus(event,"left"))
-        self.window.bind("<Right>", lambda event: self.switch_focus(event,"right"))
+        self.window.bind("<Left>",  lambda event: self.switch_focus(event,"right"))
+        self.window.bind("<Right>", lambda event: self.switch_focus(event,"left"))
         self.window.bind("<Up>",    lambda event: self.switch_focus(event,"right"))
         self.window.bind("<Down>",  lambda event: self.switch_focus(event,"left"))
 
@@ -247,7 +247,7 @@ class Interface():
             self.mouse.clear()
             self.mouse.goto(self.width*-0.46, self.height*0.35)
             self.mouse.write(text, align="left", font=self.font)
-            #self.fenster.update()
+            self.fenster.update()
 
                     
     def draw_time(self,time):

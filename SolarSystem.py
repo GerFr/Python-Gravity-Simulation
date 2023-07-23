@@ -1,8 +1,7 @@
 #SolarSystem.py
 #Gerrit Fritz
 import math
-import matplotlib.pyplot as plt
-from vectors import Vector3D
+import tinyarray as np#from vectors import Vector3D
 import time
 
 
@@ -118,7 +117,7 @@ class SolarSystem:
 
     def update_interactions(self):
         for body in self.bodies:
-            body.force = Vector3D()
+            body.force = np.array([0.,0.,0.])
 
         self.destroyed = []
         for i, body in enumerate(self.bodies):
@@ -142,7 +141,7 @@ class SolarSystemBody:
         self.name           = name 
         self.mass           = mass
         self.position       = position 
-        self.velocity       = Vector3D(*velocity)
+        self.velocity       = np.array([*velocity]) 
         self.color          = color
         self.radius         = radius
         self.nr_pos         = nr_pos
@@ -183,11 +182,11 @@ class SolarSystemBody:
         
              
     def gravitational_force(self, body):
-        force = Vector3D()
-        distance = Vector3D(*body.position) - Vector3D(*self.position)
-        distance_mag = distance.get_magnitude()
+        force = np.array([0.,0.,0.])
+        distance = np.array([*body.position]) - np.array([*self.position])
+        distance_mag = math.sqrt(distance[0]**2 + distance[1]**2 + distance[2]**2)#distance.get_magnitude()
         force_mag = 6.6743 * 10**(-11) * self.mass * body.mass / (distance_mag ** 2)
-        force = (distance.normalize() * force_mag)
+        force = (distance/distance_mag * force_mag)
         return force, distance_mag
         
 
