@@ -34,40 +34,35 @@ class Interface():
         self.timestep       = 6000  # in seconds, "simulation-time" per frame
         self.timepause      = 50    # pause between frames
         self.theta          = 1
-        self.restitution_coefficient = 0 # inelastic collisions, if 1 fully elastic if 0 merge of planets
+        self.restitution_coefficient = 0  # inelastic collisions, if 1 fully elastic if 0 merge of planets
 
+        self.absolute_pos   = True 
+        self.focus_index    = 1  # ["none","body","cm"] 0,1,2
 
-        self.absolute_pos   = False         
-        self.focus_index    = 1#["none","body","cm"] 0,1,2
-        #self.rigid_box      = False -> not implemented, could run faster
-
-        self.show_data      = False
+        self.show_data      = True
         self.show_time      = True
-        self.draw_frame_count = False
-
-        
+        self.draw_frame_count = True
 
         self.path_color     = "darkgrey"
+        
         self.bg_color       = "black"
         self.text_color     = "white"
-        self.font           = ("Courier New",15,"normal")
         self.cube_color     = "green"
+        self.font           = ("Courier New", 15, "normal")
+        
 
         self.star_size_factor = 20
         self.planet_size_factor = 800
         self.min_body_size = .5
-
-        self.draw_box       = True
-        self.draw_trail     = True
-        self.path_size      = 1.5*10**9
-        self.trail_length   = 10000
-        trail_resolution    = .5 #0-1
         self.path_planet_color = True
-        self.start_thickness= 3
-        self.thickness_scale= 2/3
-        
+        self.draw_box       = False
+        self.draw_trail     = True
+        self.min_trail_size = .5
+        self.trail_length   = 100000
+        trail_resolution    = .5  # 0-1
+        self.thickness_scale = 2.8 / 3
         self.trail_node_number   = int(self.trail_length * trail_resolution)
-        self.trail_node_distance = int(self.trail_length / self.trail_node_number) #amount of calculations between each node
+        self.trail_node_distance = int(self.trail_length / self.trail_node_number)  # amount of calculations between each node
 
         self.pointer_size   = 50
         self.onscreen       = []
@@ -76,85 +71,54 @@ class Interface():
         self.get_vid        = False
         self.max_frame      = 3600
 
-
         self.draw_rot       = True
-        self.rot_cube_pos   = [.8, -.8]#zwischen -1,1, scale of screen
+        self.rot_cube_pos   = [.8, -.8]  # zwischen -1,1, scale of screen
         self.rot_cube_scale = 80
-        self.rot_cube_scolor= "grey"
-        self.rot_cube_lcolor= "white"
+        self.rot_cube_scolor = "grey"
+        self.rot_cube_lcolor = "white"
 
-        self.show_cm        = False
+        self.show_cm        = True
         self.cm_rad         = 10
         self.cm_color       = "white"
 
-        
         self.map_colors     = False
         self.rainbow_rgb    = rgb_farben()
         self.color_attribute = "acceleration"
         self.max_acceleration = .1
-        self.max_velocity   = 5*10**5
-        self.max_force      = 9,10**27
+        self.max_velocity   = 5 * 10**5
+        self.max_force      = 9, 10**27
         self.color_mode_abs = True
-        
-        
-        
-                        
-##        #6
-##        speed = 4*10**(-9)
-##        size = 10**(-2)
-##        self.starting_data = []
-##        weights = np.array([5,8,5,8,5,8])
-##        offset = [.9995,1,1.0005,.9995,1,1.0005]
-##        nr_systems = 500
-##        for i in range(nr_systems):
-##            color = self.rainbow_rgb[int((i/(nr_systems))*len(self.rainbow_rgb))]
-##            self.starting_data.append({'planets': [('1', weights[0]*10**(-6),  5.5, (0, size/2, size/2), (-speed, 0, 0), color),
-##                                                   ('2', weights[1]*10**(-6),  5.5, (-math.tan(math.radians(30))*size, -size/2, size/2), (math.sin(math.radians(30))*speed,-math.cos(math.radians(30))*speed, 0), color),
-##                                                   ('3', weights[2]*10**(-6),  5.5, (math.tan(math.radians(30))*size, -size/2, size/2), (math.cos(math.radians(60))*speed,math.sin(math.radians(60))*speed,0), color),
-##                                                   ('1', weights[3]*10**(-6),  5.5, (0, size/2, -size/2), (speed, 0, 0), color),
-##                                                   ('2', weights[4]*10**(-6),  5.5, (-math.tan(math.radians(30))*size, -size/2, -size/2), (-math.sin(math.radians(30))*speed, math.cos(math.radians(30))*speed, 0), color),
-##                                                   ('3', weights[5]*10**(-6),  5.5, (math.tan(math.radians(30))*size, -size/2, -size/2), (-math.cos(math.radians(60))*speed, -math.sin(math.radians(60))*speed,0), color)]})
-##            weights *= offset
 
+        # mass,density, position, velocity, color (data from the web)
+        self.starting_data  = [{'suns': [('Sun', 1, 1.41, (0, 0, 0), (0, 0, 0), 'yellow')],
+                                'planets': [('Earth', 3.003 * 10**(-6), 5.5, (-1, 0, 0), (0, 1.992007 * 10**(-7), 0), 'lightgreen'),
+                                            ('Mercury', 1.651 * 10**(-7), 5.43, (-0.4, 0, 0), (0, 3.1658205 * 10**(-7), 0), 'orange')]}]
 
-
-
-
-        #mass,density, position,velocity,      color data from the web
-        self.starting_data  = [{'suns':    [('Sun', 1, 1.41, (0, 0, 0), (0, 0,0), 'yellow')],
-                              'planets': [('Earth', 3.003*10**(-6),  5.5, (-1, 0, 0), (0, 1.992007*10**(-7), 0), 'lightgreen'),
-                                          ('Mercury',  1.651*10**(-7),  5.43, (-0.4, 0, 0), (0, 3.1658205*10**(-7),0 ), 'orange')]}]
-
-
-            
-        #Values for random creation
-        self.start_random   = False
-        self.size           = 50*10000000000 #in 10**(-10) au, len of cube size, has to be big number for randint
-        self.max_velo       = 5000#2 #in 10^-10 AU/s
+        # Values for random creation
+        self.start_random   = True
+        self.size           = 50 * 10000000000  # in 10**(-10) au, len of cube size, has to be big number for randint
+        self.max_velo       = 5000  # 2 #in 10^-10 AU/s
         self.number_stars   = 100
-        self.number_planets = 0 #trail resolution anpassen
+        self.number_planets = 0  # trail resolution anpassen
         self.planet_colors  = ["beige", "lightgreen", "lightblue"]
-        self.sun_colors     = ["yellow","orange","red"]
-        
-        
-        #Benchmarking
+        self.sun_colors     = ["yellow", "orange", "red"]
+
+        # Benchmarking
         self.benchmark      = False
         self.setup_canvas()
         self.setup_solar_system()
         self.reset()
         self.window.id = self.window.after(self.timepause, self.update_system)
         self.window.mainloop()
-        
 
-        
 
     def setup_canvas(self):
         self.window = tkinter.Tk()
         self.window.title("Gravity Simulation")
         self.window.attributes("-fullscreen", True)
         window_size_tuple = self.window.maxsize()
-        self.width = window_size_tuple[0]
-        self.height= window_size_tuple[1]
+        self.width  = window_size_tuple[0]
+        self.height = window_size_tuple[1]
 
         upper_grid        = tkinter.Frame(self.window)
         button_schließen  = tkinter.Button(upper_grid, text="leave", command=self.window.destroy)
@@ -193,10 +157,10 @@ class Interface():
         self.canvas.bind("<ButtonRelease-1>", lambda event: self.mouse_off(event, "b1"))
         self.canvas.bind("<ButtonRelease-2>", lambda event: self.mouse_off(event, "b2"))
         self.canvas.bind("<ButtonRelease-3>", lambda event: self.mouse_off(event, "b3"))
-        self.window.bind("<Left>", lambda event: self.switch_focus(event, "right"))
-        self.window.bind("<Right>",lambda event: self.switch_focus(event, "left"))
-        self.window.bind("<Up>",   lambda event: self.switch_focus(event, "right"))
-        self.window.bind("<Down>", lambda event: self.switch_focus(event, "left"))
+        self.window.bind("<Left>",  lambda event: self.switch_focus(event, "right"))
+        self.window.bind("<Right>", lambda event: self.switch_focus(event, "left"))
+        self.window.bind("<Up>",    lambda event: self.switch_focus(event, "right"))
+        self.window.bind("<Down>",  lambda event: self.switch_focus(event, "left"))
 
     def getter(self, widget):
         x = self.window.winfo_rootx() + widget.winfo_x()
@@ -208,6 +172,8 @@ class Interface():
         print(self.frame_count)
 
     def switch_focus(self, event, direction):
+        print("switching focus")
+
         if direction == "left":
             self.solar_system.switch_focus("previous")
         elif direction == "right":
@@ -236,7 +202,7 @@ class Interface():
             self.old_y = event.y
             self.mouse_click2 = True
         elif self.mouse_click2 and self.finished:
-            self.FOV -= (event.y - self.old_y)*10
+            self.FOV -= (event.y - self.old_y) * 10
             self.old_y = event.y
 
             if self.FOV < self.fov_range[0]:
@@ -244,15 +210,15 @@ class Interface():
             elif self.FOV > self.fov_range[1]:
                 self.FOV = self.fov_range[1]
 
-          
+
     def rotation(self, event):
         if not self.mouse_click3:
             self.old_x = event.x
             self.old_y = event.y
             self.mouse_click3 = True
         elif self.mouse_click3 and self.finished:
-            self.y_rotation += (event.x - self.old_x)/10
-            self.x_rotation += (event.y - self.old_y)/10
+            self.y_rotation += (event.x - self.old_x) / 10
+            self.x_rotation += (event.y - self.old_y) / 10
             self.old_x = event.x
             self.old_y = event.y
 
@@ -260,7 +226,7 @@ class Interface():
                 self.y_rotation = self.y_rot_range[0]
             elif self.y_rotation > self.y_rot_range[1]:
                 self.y_rotation = self.y_rot_range[1]
-            
+
 
     def offset(self, event):
         if not self.mouse_click1:
@@ -268,53 +234,76 @@ class Interface():
             self.old_y = event.y
             self.mouse_click1 = True
         elif self.mouse_click1 and self.finished:
-            self.x_offset += (event.x - self.old_x)*self.distance/1000
-            self.y_offset += (event.y - self.old_y)*self.distance/1000
+            self.x_offset += (event.x - self.old_x) * self.distance / 1000
+            self.y_offset += (event.y - self.old_y) * self.distance / 1000
             self.old_x = event.x
             self.old_y = event.y
 
-      
-    def mouse_scroll(self, event):
-        self.distance -= (event.delta)*self.distance/1000
-        if self.distance <0:
-            self.distance = 0
-        
 
-    #[self.focus_type, self.focused_body, self.absolute_pos, self.theta, self.restitution_coefficient, self.total_ekin, self.total_epot, self.total_e, cm_pos,  self.iteration, len(self.bodies), self.tree.root_node.middle, self.tree.root_node.dimension]]
+    def mouse_scroll(self, event):
+        self.distance -= (event.delta) * self.distance / 1000
+        if self.distance < 0:
+            self.distance = 0
+
+
+    # [self.focus_type, self.focused_body, self.absolute_pos, self.theta, self.restitution_coefficient, self.total_ekin, self.total_epot, self.total_e, cm_pos,  self.iteration, len(self.bodies), self.tree.root_node.middle, self.tree.root_node.dimension]]
 
     def draw_data(self, data):
-        y_pos = .28
+        y_pos = .20
         text = ""
-        if data[1] != None: #focus on body
+        if data[1] is not None:  # focus on body
             y_pos = .08
             hover_body = data[1]
             name    = hover_body.name
-            pos     = hover_body.position
+            pos     = hover_body.position.copy()
             radius  = hover_body.radius
             mass    = hover_body.mass
-            velocity= hover_body.velocity
-            acceleration = hover_body.acceleration
+            velocity = hover_body.velocity.copy()
+            acceleration = hover_body.acceleration.copy()
             density = hover_body.density
-            force = hover_body.force
+            force = hover_body.force.copy()
             if not self.absolute_pos:
                 pos -= hover_body.position
-        
+
             vectors = [pos, velocity, acceleration, force]
             for i in range(len(vectors)):
-                vec_mag = math.sqrt(np.dot(vectors[i],vectors[i]))
-                vectors[i] = f"mag:{vec_mag:.2e} vec:({vectors[i][0]:.2e},{vectors[i][1]:.2e},{vectors[i][2]:.2e})"
-            text +=  f"""Name:         {name}\nRadius:       {radius:.2e}\nMass:         {mass:.2e}\nDensity:      {density}\nPosition:     {vectors[0]}\nVelocity:     {vectors[1]}\nAcceleration: {vectors[2]}\nForce:        {vectors[3]}\n"""
+                vec_mag = math.sqrt(np.dot(vectors[i], vectors[i]))
+                vectors[i] = f"\
+mag:{vec_mag:.2e} vec:({vectors[i][0]:.2e},{vectors[i][1]:.2e},{vectors[i][2]:.2e})"
+
+            text += f"""\
+Name:         {name}\n\
+Radius:       {radius:.2e}\n\
+Mass:         {mass:.2e}\n\
+Density:      {density}\n\
+Position:     {vectors[0]}\n\
+Velocity:     {vectors[1]}\n\
+Acceleration: {vectors[2]}\n\
+Force:        {vectors[3]}\n\
+"""
 
         if data[2]:
             view = "absolute"
         else:
             view = "relative"
-        
+
         cm_pos = f"vec:({data[8][0]:.2e},{data[8][1]:.2e},{data[8][2]:.2e})"
-        text += f"""Focus type:   {data[0]}\nView:         {view}\nTheta:        {data[3]}\nR.Coefficient:{data[4]}\nEkin:         {data[5]:.2e}\nEpot:         {data[6]:.2e}\nEtotal:       {data[7]:.2e}\nCenter of m.: {cm_pos}\nIteration:    {data[9]:.2e}\nNr. Bodies    {data[10]:.2e}\nRoot n. size: {data[12]:.2e}\n"""
+        text += f"""\
+Focus type:   {data[0]}\n\
+View:         {view}\n\
+Theta:        {data[3]}\n\
+R.Coefficient:{data[4]}\n\
+Ekin:         {data[5]:.2e}\n\
+Epot:         {data[6]:.2e}\n\
+Etotal:       {data[7]:.2e}\n\
+Center of m.: {cm_pos}\n\
+Iteration:    {data[9]:.2e}\n\
+Nr. Bodies    {data[10]:.2e}\n\
+Root n. size: {data[12]:.2e}\n"""
 
         self.data_pointer.goto(self.width*-0.46, self.height*y_pos)
         self.data_pointer.write(text, move = True, align="left", font=self.font)
+        
             
 
                     
@@ -328,9 +317,6 @@ class Interface():
         self.data_pointer.clear()
         self.data_pointer.write(text, align="left", font=self.font)
 
-    
-        
-        
 
     def reset(self):
         self.FOV        = self.fov_range[2]
@@ -338,8 +324,7 @@ class Interface():
         self.x_offset   = 0
         self.y_offset   = 0
         self.x_rotation = self.start_x_rot
-        self.y_rotation = self.y_rot_range[2]+self.start_y_rot
-        
+        self.y_rotation = self.y_rot_range[2]+self.start_y_rot    
 
 
     def get_screen_xy(self,x,y,z):
@@ -363,21 +348,20 @@ class Interface():
                 return None, None
 
 
-    def draw_last_pos(self, last_pos, color):
+    def draw_last_pos(self, last_pos, color, radius, body_size_factor):
         
         last_screen_pos = []
 
-        last_pos.reverse()
-        thickness = self.start_thickness
-        scale = self.thickness_scale
-        
+        last_pos.reverse()        
         for i, pos in enumerate(last_pos):
-            thickness *= scale
-            
             s_pos, f = self.get_screen_xy(*pos)
-            last_screen_pos.append((s_pos, f, thickness))
-
-
+            if f is not None:
+                rad = radius * body_size_factor * f * self.thickness_scale**i
+            else:
+                rad = None
+            last_screen_pos.append((s_pos, f, rad))
+        
+        
         last_pos.reverse()
         self.pointer.pencolor(self.path_color)
         if self.path_planet_color:
@@ -385,12 +369,14 @@ class Interface():
         for posf in last_screen_pos:
             pos = posf[0]
             f   = posf[1]
-            thickness = posf[2]
+            rad = posf[2]
             
             if pos == None:
                 self.pointer.up()
             else:
-                self.pointer.pensize(self.path_size*f*thickness)
+                if rad <= self.min_trail_size:
+                    rad = self.min_trail_size
+                self.pointer.pensize(rad)
                 self.pointer.goto(pos)
                 self.pointer.down()
                 
@@ -402,7 +388,7 @@ class Interface():
             #qube[i] = {(sx,sy), f}
         self.pointer.pencolor(self.cube_color)
         
-        lines = [(3,1),(1,0),(0,2),(2,3),(3,7),(7,6),(6,2),(4,6),(7,5),(5,1),(0,4),(4,5)]#die seiten des würfels ald index der qube liste
+        lines = [(3,1),(1,0),(0,2),(2,3),(3,7),(7,6),(6,2),(4,6),(7,5),(5,1),(0,4),(4,5)]
         for line in lines:
             pos1 = qube[line[0]][0]
             pos2 = qube[line[1]][0]
@@ -471,14 +457,19 @@ class Interface():
         pointer.end_fill()
         pointer.up()
             
-
+    def get_size_factor(self, body_type):
+        if body_type is Sun:
+            return self.star_size_factor
+        elif body_type is Planet:
+            return self.planet_size_factor
+        else:
+            return 1
+            print(f"No size indication for bodytype: {body_type}")
+        
     def update_vertices(self):
         
-        
-        t1a = time.time()
         self.rotation_matrix = Rx(math.radians(self.x_rotation)) * Ry(math.radians(180-self.y_rotation)) * Rz(math.radians(180-self.z_rotation))
         self.finished = False
-        t2a = time.time()
         self.pointer.clear()
         
         #onscreen((name,pos,radius,mass,color,trail,velocity,acceleration,density,force,2dpos,f,type))
@@ -486,9 +477,7 @@ class Interface():
         for system in self.solar_systems:
             self.solar_system = system
             bodies, nodes, system, cm = system.get_data()
-        
-            t1b = time.time()
-            
+                    
             
             if self.map_colors:
                 self.color_map_bodies(bodies)
@@ -497,10 +486,12 @@ class Interface():
             
             for body in bodies:
                 body_pos, f = self.get_screen_xy(*body[1])
+                body_size_factor = self.get_size_factor(body[12])
+                    
                 if self.draw_trail:
-                    self.draw_last_pos(body[5],body[4])
+                    self.draw_last_pos(body[5],body[4],body[2], body_size_factor)
                 if body_pos != None:
-                    data = (*body, body_pos, f)
+                    data = (*body, body_pos, f, body_size_factor)
                     self.onscreen.append(data)
 
 
@@ -510,21 +501,12 @@ class Interface():
             radius      = body[2]
             color       = body[4]
             f           = body[14]
-            body_type   = body[12]
-
-            if body_type is Sun:
-                body_size_factor = self.star_size_factor
-            elif body_type is Planet:
-                body_size_factor = self.planet_size_factor
-            else:
-                body_size_factor = 1
-                print(f"No size indication for bodytype: {body_type}")
+            body_size_factor = body[15]
 
             rad = radius*f*body_size_factor
             if rad <self.min_body_size:
                 rad =self.min_body_size
             self.draw_circle(self.pointer, body_pos, rad, color, color)
-        t2b = time.time()
         
         if self.show_cm:
             self.draw_cm(cm)
@@ -533,37 +515,24 @@ class Interface():
             for qube in nodes:
                 self.draw_cube(qube)
 
-        if self.show_data:
-            self.draw_data(system)
-                
-
-
-
-
         if self.show_time:
             self.draw_time(self.solar_system.time)
-        
 
-        t1d = time.time()      
+        if self.show_data:
+            self.draw_data(system)
+
         if self.draw_rot:
             self.draw_rot_cube()
 
-        t1c = time.time()
         if self.get_vid and not self.pause:
             self.getter(self.canvas)
-        t2c = time.time()
 
-        
-        t2d = time.time()
-        
+            
         self.fenster.update()
 
 
         self.finished = True
 
-        
-            
-        return t2a-t1a, t2b-t1b, t2c-t1c, t2d-t1d
 
     
 
@@ -602,7 +571,8 @@ class Interface():
         '''{'suns':    [('sun 1', 1, 1.41, (0, 0, 0), (0, 0,0), 'yellow')],
             'planets': [('Earth', 3.003*10**(-6),  5.5, (-1, 0, 0), (0, 0, 1.992007*10**(-7)), 'lightgreen'),
                         ('Mercury',  1.651*10**(-7),  5.43, (-0.4, 0, 0), (0, 0, 3.1658205*10**(-7)), 'green')]}'''
-          
+        self.solar_system = SolarSystem(self.theta,self.restitution_coefficient,self.absolute_pos,self.focus_index)
+        
         for i in range(self.number_stars+self.number_planets):
             position =((random.randint(0,self.size)-(self.size/2))*10**(-10),
                        (random.randint(0,self.size)-(self.size/2))*10**(-10),
@@ -622,7 +592,9 @@ class Interface():
                 density = random.randint(100,10000)/1000
                 color = random.choice(self.planet_colors)
                 Planet(self.solar_system,name,mass,density,position,velocity,color,self.trail_node_number,self.trail_node_distance)
-                
+        self.solar_system.set_focus(None)
+        self.solar_systems = [self.solar_system]
+        
 
     def setup_solar_system(self):
         self.solar_systems = []
@@ -652,12 +624,13 @@ class Interface():
             self.frame_count += 1
             t1 = time.time()
             for system in self.solar_systems:
-                self.time_position, self.time_interactions, self.time_nodes = system.calculate(self.timestep, self.draw_box)
+                system.calculate(self.timestep, self.draw_box)
             t2 = time.time()
             self.physics_time = t2 - t1
 
         t1 = time.time()
-        self.time_matrix, self.trail_sort, self.video, self.qube_data = self.update_vertices()
+        # self.time_matrix, self.trail_sort, self.video, self.qube_data = 
+        self.update_vertices()
         t2 = time.time()
         self.drawing_time = t2 - t1
         
@@ -665,7 +638,13 @@ class Interface():
             self.window.destroy()
 
         if self.benchmark:
-            print(f"draw={self.drawing_time: .4f}, rot={self.time_matrix: .4f}, planet={self.trail_sort: .4f}, dta/qube={self.qube_data: .4f}, calc={self.physics_time: .4f}, pos/velo={self.time_position: .4f}, force={self.time_interactions: .4f}, node={self.time_nodes: .4f}")
+            print(f"\
+draw={self.drawing_time: .4f}, \
+calc={self.physics_time: .4f}, \
+pos/velo={self.time_position: .4f}, \
+force={self.time_interactions: .4f}, \
+node={self.time_nodes: .4f}")
+# rot={self.time_matrix: .4f}, planet={self.trail_sort: .4f}, dta/qube={self.qube_data: .4f}, \
 
         
         self.window.id = self.window.after(self.timepause, self.update_system)

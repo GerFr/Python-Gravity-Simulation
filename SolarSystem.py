@@ -38,6 +38,7 @@ class SolarSystem:
         
     def add_body(self, body):
         self.bodies.append(body)
+        
 
     def remove_body(self, body):
         self.bodies.remove(body)
@@ -63,24 +64,16 @@ class SolarSystem:
             for body in self.bodies:
                 body.acceleration = body.force/body.mass
                 
-        t1a = time.time()
         self.update_center_of_mass(timestep)
         for body in self.bodies:
             body.update_velocity(timestep)
             body.update_position(timestep)
         
-        t2a = time.time()
-        
-
-        t1b = time.time()
         self.update_interactions()
-        t2b = time.time()
         
-        t1c = time.time()
         self.tree_nodes = []
         if draw_box:
             self.tree.get_all_nodes(self.tree.root_node,self.tree_nodes)
-        t2c = time.time()
 
         for body in self.destroyed:
             self.remove_body(body)
@@ -99,8 +92,6 @@ class SolarSystem:
 
         self.time += timestep
         self.iteration += 1
-
-        return t2a - t1a, t2b - t1b, t2c - t1c
 
 
     def update_center_of_mass(self, timestep):
@@ -136,7 +127,7 @@ class SolarSystem:
             radius  = body.radius
             mass    = body.mass
             color   = body.color
-            trail= [position - default_pos for position in body.trail]
+            trail = [position-default_pos  for position in body.trail]
             body_data.append((name,pos,radius,mass,color,trail, body.velocity, body.acceleration, body.density, body.force, body.e_kin, body.e_pot, body_type))
 
 
@@ -183,16 +174,17 @@ class SolarSystem:
         center = self.get_focus_pos()
 
         largest_val = 0
-        furthest_bod = None
-        for bodie in self.bodies:
-            for i, val in enumerate(bodie.position):
+        furthest_body = None
+        for body in self.bodies:
+            
+            for i, val in np.ndenumerate(body.position):
                 dist_sqr = (val-center[i])**2 
                 if dist_sqr > largest_val:
                     largest_val = dist_sqr
                     largest_index = i
-                    furthest_bod = bodie
+                    furthest_body = body
             
-        dimension = math.sqrt(((furthest_bod.position[largest_index]-center[largest_index])*2.5)**2)#
+        dimension = math.sqrt(((furthest_body.position[largest_index]-center[largest_index])*2.5)**2)#
         root = Node(center, dimension)
         self.tree = Octree(self.bodies, root, self.theta)
         root.compute_mass_distribution()
@@ -254,7 +246,7 @@ class SolarSystemBody:
 
         self.counter += 1
         if self.counter == self.point_dist:
-            self.trail.append(self.position)
+            self.trail.append(self.position.copy())
             self.counter = 0
         
         if len(self.trail)> self.nr_pos:

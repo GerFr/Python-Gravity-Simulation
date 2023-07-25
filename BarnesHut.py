@@ -103,7 +103,7 @@ class Octree():
 
     def insert_to_node(self, node, particle):
         #check if point is in cuboid of present node
-        if not node.in_bounds(particle.position) and particle.position != self.root_node.middle:
+        if not node.in_bounds(particle.position) and not np.array_equal(particle.position, self.root_node.middle):
             print("error particle not in bounds")
             print(f"middle: {node.middle}, dimension: {node.dimension}, particle position: {particle.position}, type: {type(particle)}")
             return
@@ -161,7 +161,7 @@ class Octree():
             
             
         #find regional node were particle is not the center of mass (subnodes particle is particle)
-        elif node.particle == None and particle.position.all() != node.center_of_mass.all():
+        elif node.particle == None and not np.array_equal(particle.position, node.center_of_mass):
             distance = np.array([*particle.position]) - np.array([*node.center_of_mass])
             r = math.sqrt(np.dot(distance,distance))
             d = node.dimension
