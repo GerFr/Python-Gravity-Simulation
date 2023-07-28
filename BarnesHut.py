@@ -1,6 +1,6 @@
-#tree has to be recreated for every step of the sim maybe sometimes it can be skipped
-#seems very expensive for python
-#calculate the tree every 5 steps or with multithreading, parrallel the previous tree is analyzed in the main thread and the new data is made to a new tree
+# Barnes hut module
+# Gerrit Fritz
+
 import numpy as np
 import math
 

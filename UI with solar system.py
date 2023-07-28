@@ -1,4 +1,6 @@
+# Main program
 # tkinter 3d gfx interface
+# Gerrit Fritz
 
 import math
 import tkinter
