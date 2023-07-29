@@ -667,4 +667,5 @@ def rgb_farben():
     return rgb_list
 
 
-Interface()
+if __name__ == "__main__":
+    Interface()

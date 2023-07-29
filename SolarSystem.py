@@ -26,11 +26,12 @@ class SolarSystem:
         self.cm_pos         = np.array([0, 0, 0])
         self.cm_velo        = None
 
-        if self.focus_index >= 0 and self.focus_index < len(self.focus_options):
-            self.focus_type = self.focus_options[0]
-            print(f"focus index {focus_index} not in focus options {self.focus_options}, swithing to default {self.focus_options[0]}")
+        if focus_index >= 0 and focus_index < len(self.focus_options):
+            self.focus_index = focus_index
         else:
-            self.focus_type = self.focus_options[focus_index]
+            self.focus_index = 0
+            print(f"focus index {focus_index} not in focus options {self.focus_options}, swithing to default {self.focus_options[0]}")
+        self.focus_type = self.focus_options[focus_index]
 
     def add_body(self, body):
         self.bodies.append(body)
