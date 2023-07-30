@@ -6,7 +6,7 @@ import math
 import tkinter
 import turtle
 import time
-from SolarSystem import SolarSystem, Planet, Sun
+from SolarSystem import SolarSystem, Planet, Sun, Blackhole
 import numpy as np
 import random
 from PIL import ImageGrab
@@ -33,7 +33,7 @@ class Interface():
         self.pause          = False
         self.finished       = True
 
-        self.timestep       = 30000  # in seconds, "simulation-time" per frame
+        self.timestep       = 100000  # in seconds, "simulation-time" per frame
         self.timepause      = 50    # pause between frames
         self.theta          = 1
         self.restitution_coefficient = 0  # inelastic collisions, if 1 fully elastic if 0 merge of planets
@@ -95,9 +95,9 @@ class Interface():
                                 'planets': [('Mercury', 1.651 * 10**(-7), 5.43, (-0.449, 0, 0), (0, 3.165821 * 10**(-7), 0), 'orange'),
                                             ('Venus',   2.447 * 10**(-6), 5.24, (-0.728, 0, 0), (0, 2.340942 * 10**(-7), 0), 'yellow'),
                                             ('Earth',   3.003 * 10**(-6), 5.51, (-1, 0, 0),     (0, 1.992007 * 10**(-7), 0), 'lightgreen'),
-                                            ('Mars',    3.213 * 10**(-7), 3.93, (-1.658, 0, 0), (0, 1.609648 * 10**(-7), 0), 'red'),
-                                            ('Jupiter', 9.543 * 10**(-4), 1.33, (-4.961, 0, 0), (0, 8.730071 * 10**(-8), 0), (165,145,134)),
-                                            ('Saturn',  2.857 * 10**(-4), 0.687,(-9.7695,0, 0), (0, 6.463996 * 10**(-8), 0), (234,214,184))]}]
+                                            ('Mars',    3.213 * 10**(-7), 3.93, (-1.658, 0, 0), (0, 1.609648 * 10**(-7), 0), 'red')]}]
+                                          # ('Jupiter', 9.543 * 10**(-4), 1.33, (-4.961, 0, 0), (0, 8.730071 * 10**(-8), 0), (165,145,134)),
+                                          # ('Saturn',  2.857 * 10**(-4), 0.687,(-9.7695,0, 0), (0, 6.463996 * 10**(-8), 0), (234,214,184))
 
         # Values for random creation
         self.start_random   = False
