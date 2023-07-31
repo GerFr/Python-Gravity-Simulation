@@ -256,32 +256,35 @@ class SolarSystemBody:
 # ---------------------------------------------------------------------------------------------------------------------
 class Sun(SolarSystemBody):
 
-    def __init__(self, solar_system, name="default sun", sol_mass=2, density=1.41, position_AU=(0, 0, 0), velocity_AU=(0, 0, 0), color="yellow", nr_pos=50, point_dist=10):
+    def __init__(self, solar_system, name="default sun", sol_mass=1, density=1.41, position_AU=(0, 0, 0), velocity_km=(0, 0, 0), color="yellow", nr_pos=50, point_dist=10):
         au = 1.496 * 10**11
+        km = 10**3
         solM = 1.989 * (10**30)
         mass = sol_mass * solM  # multiple of solar mass
         position = tuple(au * pos for pos in position_AU)
-        velocity = tuple(au * velo for velo in velocity_AU)
+        velocity = tuple(km * velo for velo in velocity_km)
         super(Sun, self).__init__(solar_system, name, mass, density, position, velocity, color, nr_pos, point_dist)
 
 
 class Planet(SolarSystemBody):
 
-    def __init__(self, solar_system, name="default planet", sol_mass=3 * 10**(-6), density=5.5, position_AU=(0, 0, 0), velocity_AU=(0, 0, 0), color="blue", nr_pos=50, point_dist=10):
+    def __init__(self, solar_system, name="default planet", ea_mass=1, density=5.5, position_AU=(0, 0, 0), velocity_km=(0, 0, 0), color="blue", nr_pos=50, point_dist=10):
         au = 1.496 * 10**11
-        solM = 1.989 * (10**30)
-        mass = sol_mass * solM  # multiple of solar mass
+        km = 10**3
+        eam = 5.972 * 10**24
+        mass = ea_mass * eam  # multiple of solar mass
         position = tuple(au * pos for pos in position_AU)
-        velocity = tuple(au * velo for velo in velocity_AU)
+        velocity = tuple(km * velo for velo in velocity_km)
         super(Planet, self).__init__(solar_system, name, mass, density, position, velocity, color, nr_pos, point_dist)
 
 
 class Blackhole(SolarSystemBody):
 
-    def __init__(self, solar_system, name="default hole", sol_mass=10, density=4 * 10**14, position_AU=(0, 0, 0), velocity_AU=(0, 0, 0), color="black", nr_pos=50, point_dist=10):
+    def __init__(self, solar_system, name="default hole", sol_mass=10, density=4 * 10**14, position_AU=(0, 0, 0), velocity_km=(0, 0, 0), color="black", nr_pos=50, point_dist=10):
         au = 1.496 * 10**11
+        km = 10**3
         solM = 1.989 * (10**30)
         mass = sol_mass * solM  # multiple of solar mass
         position = tuple(au * pos for pos in position_AU)
-        velocity = tuple(au * velo for velo in velocity_AU)
+        velocity = tuple(km * velo for velo in velocity_km)
         super(Planet, self).__init__(solar_system, name, mass, density, position, velocity, color, nr_pos, point_dist)

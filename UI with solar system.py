@@ -91,18 +91,16 @@ class Interface():
         self.color_mode_abs = True
 
         # mass,density, position, velocity, color (data from the web)
-        self.starting_data  = [{'suns': [('Sun', 1, 1.41, (0, 0, 0), (0, 0, 0), 'yellow')],
-                                'planets': [('Mercury', 1.651 * 10**(-7), 5.43, (-0.449, 0, 0), (0, 3.165821 * 10**(-7), 0), 'orange'),
-                                            ('Venus',   2.447 * 10**(-6), 5.24, (-0.728, 0, 0), (0, 2.340942 * 10**(-7), 0), 'yellow'),
-                                            ('Earth',   3.003 * 10**(-6), 5.51, (-1, 0, 0),     (0, 1.992007 * 10**(-7), 0), 'lightgreen'),
-                                            ('Mars',    3.213 * 10**(-7), 3.93, (-1.658, 0, 0), (0, 1.609648 * 10**(-7), 0), 'red')]}]
-                                          # ('Jupiter', 9.543 * 10**(-4), 1.33, (-4.961, 0, 0), (0, 8.730071 * 10**(-8), 0), (165,145,134)),
-                                          # ('Saturn',  2.857 * 10**(-4), 0.687,(-9.7695,0, 0), (0, 6.463996 * 10**(-8), 0), (234,214,184))
+        self.starting_data  = [{'suns':    [('Sun',     1    , 1.41, (0., 0., 0.),     (0., 0., 0.),    'yellow')],
+                                'planets': [('Mercury', 0.055, 5.43, (-0.449, 0., 0.), (0., 47.36, 0.), 'orange'),
+                                            ('Venus',   0.815, 5.24, (-0.728, 0., 0),  (0., 35.02, 0.), 'yellow'),
+                                            ('Earth',   1    , 5.51, (-1, 0, 0.),      (0., 29.78, 0.), 'lightgreen'),
+                                            ('Mars',    0.107, 3.93, (-1.658, 0., 0.), (0., 24.08, 0.), 'red')]}]
 
         # Values for random creation
         self.start_random   = False
         self.size           = 50 * 10000000000  # in 10**(-10) au, len of cube size, has to be big number for randint
-        self.max_velo       = 5000  # 2 #in 10^-10 AU/s
+        self.max_velo       = 500  # in .15 km/s
         self.number_stars   = 100
         self.number_planets = 0  # trail resolution anpassen
         self.planet_colors  = ["beige", "lightgreen", "lightblue"]
@@ -555,9 +553,9 @@ Root n. size: {data[12]:.2e}\n"""
             position = ((random.randint(0, self.size) - (self.size / 2)) * 10**(-10),
                         (random.randint(0, self.size) - (self.size / 2)) * 10**(-10),
                         (random.randint(0, self.size) - (self.size / 2)) * 10**(-10))
-            velocity = ((random.randint(0, self.max_velo) - (self.max_velo / 2)) * 10**(-10),
-                        (random.randint(0, self.max_velo) - (self.max_velo / 2)) * 10**(-10),
-                        (random.randint(0, self.max_velo) - (self.max_velo / 2)) * 10**(-10))
+            velocity = ((random.randint(0, self.max_velo) - (self.max_velo / 2)) * .15,
+                        (random.randint(0, self.max_velo) - (self.max_velo / 2)) * .15,
+                        (random.randint(0, self.max_velo) - (self.max_velo / 2)) * .15)
             if i > self.number_stars:
                 name = "sun " + str(i + 1)
                 mass = random.randint(1, 1000) / 100
