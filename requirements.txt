@@ -1,2 +1,5 @@
 numpy 
-PIL
+pillow
+
+# in the directory with cmd
+# py -m pip install -r requirements.txt
