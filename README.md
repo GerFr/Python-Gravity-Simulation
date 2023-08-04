@@ -9,6 +9,8 @@ SolarSystem.py and BarnesHut.py supplies the program with functions.
 The Barnes hut algorythm is highly optimised for many bodies and 
 makes larger scale n body simulations possible.
 
+Example runs can be found at YouTube with https://youtube.com/@physimdev.
+
 Any help or assistance is greatly appreciated.
 Kindly share this project!
 
