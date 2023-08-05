@@ -3,7 +3,7 @@
 This is an advanced orbital dynamics and n-body simulation program.
 Through simple rules of physics complex and beautiful behaviours can occur.
 
-The main file is "UI with solar system.py" wich has to be run  to be started.
+The main file is main.py wich has to be run  to be started.
 SolarSystem.py and BarnesHut.py supplies the program with functions.
 
 The Barnes hut algorythm is highly optimised for many bodies and 
@@ -26,7 +26,7 @@ This can be done with the command
 A python installation is also needed.
 
 # Running the code
-Run the file "UI with solar system.py" either from the file explorer, an IDE or CMD/shell.
+Run the file main.py either from the file explorer, an IDE or CMD/shell.
 
 # Tweakables
 There are easily exchangeable variables in the init function of the Interface class in the "UI with solar system.py". 
