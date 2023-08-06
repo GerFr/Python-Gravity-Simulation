@@ -14,6 +14,25 @@ Example runs can be found at YouTube with https://youtube.com/@physimdev.
 Any help or assistance is greatly appreciated.
 Kindly share this project!
 
+# Planned features
+1.) docstrings
+
+2.) Type hints
+
+3.) unit tests
+
+4.) clicking on objects
+
+5.) data handling with json
+
+
+
+possible features:
+
+placing objects
+
+ui package 
+
 # Installation guide
 1.) download the code from github (either with .zip or git pull/clone)
 
