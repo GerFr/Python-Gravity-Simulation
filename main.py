@@ -3,6 +3,7 @@
 Setup and main loop of the gravity simulation.
 Includes all functions that combine solar system data with the tkinter interface. 
 Handles tkinter event bindings and other general functions.
+Hobby project of PhySimdev. 
 
 Typical usage example:
 
@@ -93,7 +94,7 @@ class Interface():
         self.cm_color       = "white"
 
         self.map_colors     = False
-        self.rainbow_rgb    = rgb_farben()
+        self.rainbow_rgb    = rgb_colors()
         self.color_attribute = "acceleration"
         self.max_acceleration = .1
         self.max_velocity   = 5 * 10**5
@@ -199,7 +200,15 @@ class Interface():
         image.save(f"{self.image_folder}/frame_{self.frame_count}.gif")
 
     def switch_focus(self, event, direction):
-        print("switching focus")
+        """Switch of focus between bodies.
+
+        Tkinter event which is called by the arrow keys.
+
+        Args:
+            event: Mandatory tkinter event argument.
+            direction: A string, either left or right, wich shows wich
+            next body is selected.
+        """
 
         if direction == "left":
             self.solar_system.switch_focus("previous")
@@ -209,6 +218,10 @@ class Interface():
             self.solar_system.clear_trail()
 
     def toggle_pause(self):
+        """Binary switch of self.pause"
+
+        Method called by the pause button. Changes text on that button.
+        """
         if not self.pause:
             self.pause = True
             self.pause_button.config(text="start")
@@ -217,6 +230,16 @@ class Interface():
             self.pause_button.config(text="pause")
 
     def mouse_off(self, event, button):
+        """Event to determine mouse release of different buttons.
+
+        Tkinter event which is called by the arrow keys.
+        Sets mouse_click arguments for specific buttons to False,
+        thus ending the specific mouse button movement.
+
+        Args:
+            event: Mandatory tkinter event argument.
+            button: Strings of either b1, b2 or b3 to determine the button.
+        """
         if button == "b1":
             self.mouse_click1 = False
         elif button == "b2":
@@ -225,6 +248,16 @@ class Interface():
             self.mouse_click3 = False
 
     def change_fov(self, event):
+        """Event to change the FOV.
+
+        Tkinter event which is called by the middle mouse button.
+        Activates the specific mouse click initiating the mouse movement and
+        adds mouse change of position to the FOV value.
+
+        Args:
+            event: Mandatory tkinter event argument. Used to determine 
+            mouse movement.
+        """
         if not self.mouse_click2:
             self.old_y = event.y
             self.mouse_click2 = True
@@ -238,6 +271,16 @@ class Interface():
                 self.FOV = self.fov_range[1]
 
     def rotation(self, event):
+        """Event to change the rotation.
+
+        Tkinter event which is called by the right mouse button.
+        Activates the specific mouse click initiating the mouse movement and
+        adds mouse change of position to the x and y rotation.
+
+        Args:
+            event: Mandatory tkinter event argument. Used to determine 
+            mouse movement.
+        """
         if not self.mouse_click3:
             self.old_x = event.x
             self.old_y = event.y
@@ -254,6 +297,16 @@ class Interface():
                 self.y_rotation = self.y_rot_range[1]
 
     def offset(self, event):
+        """Event to change the x/y offset.
+
+        Tkinter event which is called by the left mouse button.
+        Activates the specific mouse click initiating the mouse movement and
+        adds mouse change of position to the x and y position.
+
+        Args:
+            event: Mandatory tkinter event argument. Used to determine
+            mouse movement.
+        """
         if not self.mouse_click1:
             self.old_x = event.x
             self.old_y = event.y
@@ -265,6 +318,15 @@ class Interface():
             self.old_y = event.y
 
     def mouse_scroll(self, event):
+        """Event to change the distance.
+
+        Tkinter event which is called by the scroll wheel.
+        Determines distance and therfore size of the object on the screen.
+
+        Args:
+            event: Mandatory tkinter event argument. Used to get the
+            scroll distance to determine the change in distance.
+        """
         self.distance -= (event.delta) * self.distance / 1000
         if self.distance < 0:
             self.distance = 0
@@ -674,7 +736,7 @@ def Rz(theta):
                       [ 0              , 0               , 1 ]])
 
 
-def rgb_farben():
+def rgb_colors():
     rgb_list = []
     for i in range(round(255 / 2)):
         b = 0 + i
