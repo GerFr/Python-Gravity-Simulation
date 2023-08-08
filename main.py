@@ -1,6 +1,13 @@
-# Main program
-# tkinter 3d gfx interface
-# Gerrit Fritz
+"""Main program for the gravity simulation.
+
+Setup and main loop of the gravity simulation.
+Includes all functions that combine solar system data with the tkinter interface. 
+Handles tkinter event bindings and other general functions.
+
+Typical usage example:
+
+  interface = Interface()
+"""
 
 import math
 import tkinter
@@ -11,12 +18,15 @@ import numpy as np
 import random
 from PIL import ImageGrab
 
-# fix bugs in relative movement barnes hut
-# upgrade ui, speed
-
-
 class Interface():
+    """Handles tkinter and graphical methods."""
+
     def __init__(self):
+        """Setup of the Interface.
+
+        Declares variables for the tkinter interface and calls methods that
+        start the simulation.
+        """
 
         self.fov_range      = (200, 4000, 2000)
         self.y_rot_range    = (-90, 90, 0)
@@ -115,6 +125,12 @@ class Interface():
         self.window.mainloop()
 
     def setup_canvas(self):
+        """Setup of tkinter interface and turtle canvas.
+
+        Creates tkinter widgets and the turtle canvas. Decleration of tkinter
+        event bindings for keyboardpress and mouse movements.
+        """
+
         self.window = tkinter.Tk()
         self.window.title("Gravity Simulation")
         self.window.attributes("-fullscreen", True)
@@ -165,13 +181,22 @@ class Interface():
         self.window.bind("<Down>",  lambda event: self.switch_focus(event, "left"))
 
     def getter(self, widget):
+        """Saves screen image of a widget.
+
+        Saves pixel data of a tkinter widget and saves it as an image. Uses
+        PIL.ImageGrab.grab().crop((x,y,z,h)) to create an image.
+
+        Args:
+            widget: A tkinter widget that will be scanned. Preferably the
+            turtle canvas.
+        """
+
         x = self.window.winfo_rootx() + widget.winfo_x()
         y = self.window.winfo_rooty() + widget.winfo_y()
         x1 = x + widget.winfo_width()
         y1 = y + widget.winfo_height()
         image = ImageGrab.grab().crop((x, y, x1, y1))
         image.save(f"{self.image_folder}/frame_{self.frame_count}.gif")
-        print(self.frame_count)
 
     def switch_focus(self, event, direction):
         print("switching focus")
