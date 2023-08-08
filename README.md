@@ -15,7 +15,7 @@ Any help or assistance is greatly appreciated.
 Kindly share this project!
 
 # Planned features
-1.) docstrings
+1.) docstrings - there is a current branch
 
 2.) Type hints
 
