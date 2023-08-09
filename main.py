@@ -189,7 +189,7 @@ class Interface():
 
         Args:
             widget: A tkinter widget that will be scanned. Preferably the
-            turtle canvas.
+                turtle canvas.
         """
 
         x = self.window.winfo_rootx() + widget.winfo_x()
@@ -207,7 +207,7 @@ class Interface():
         Args:
             event: Mandatory tkinter event argument.
             direction: A string, either left or right, wich shows wich
-            next body is selected.
+                next body is selected.
         """
 
         if direction == "left":
@@ -256,7 +256,7 @@ class Interface():
 
         Args:
             event: Mandatory tkinter event argument. Used to determine 
-            mouse movement.
+                mouse movement.
         """
         if not self.mouse_click2:
             self.old_y = event.y
@@ -279,7 +279,7 @@ class Interface():
 
         Args:
             event: Mandatory tkinter event argument. Used to determine 
-            mouse movement.
+                mouse movement.
         """
         if not self.mouse_click3:
             self.old_x = event.x
@@ -305,7 +305,7 @@ class Interface():
 
         Args:
             event: Mandatory tkinter event argument. Used to determine
-            mouse movement.
+                mouse movement.
         """
         if not self.mouse_click1:
             self.old_x = event.x
@@ -325,7 +325,7 @@ class Interface():
 
         Args:
             event: Mandatory tkinter event argument. Used to get the
-            scroll distance to determine the change in distance.
+                scroll distance to determine the change in distance.
         """
         self.distance -= (event.delta) * self.distance / 1000
         if self.distance < 0:
@@ -335,12 +335,12 @@ class Interface():
     def draw_data(self, data):
         """Method that writes data onto the screen.
 
-        Interface method that writes detailed data onto the turtle canvas.
+        Method that writes detailed data onto the turtle canvas.
         Uses the data arg adn formats it to a specfic form.
 
         Args:
             data: list of body and system attributes that will be written
-            onto the screen. It includes:
+                onto the screen. It includes:
                 0: type of focus either "none", "body" or "cm" 
                 1: the focused body
                 2: the absolute postion of that body
@@ -411,14 +411,14 @@ Root n. size: {data[12]:.2e}\n"""
         self.data_pointer.write(text, move=True, align="left", font=self.font)
 
     def draw_time(self, time):
-        """Method that draws the physics time.
+        """Method that writes the physics time.
 
-        Tkinter event which is called by the scroll wheel.
-        Determines distance and therfore size of the object on the screen.
+        Method that writes the accurrate physics time of the simulation.
+        Calls the external sec to day function wich returns the accurate 
+        time in clear steps.
 
         Args:
-            event: Mandatory tkinter event argument. Used to get the
-            scroll distance to determine the change in distance.
+            time: seconds of physics time since initiation. 
         """
         self.data_pointer.goto(self.width * -0.46, -self.height * 0.42)
         times = ConvertSectoDay(self.solar_system.time)
@@ -430,6 +430,12 @@ Root n. size: {data[12]:.2e}\n"""
         self.data_pointer.write(text, align="left", font=self.font)
 
     def reset(self):
+        """Method that reset 3d view variables.
+
+        Resets transformation, distance and rotation variables to
+        predetermined values. Determines distance and therfore size of
+        the object on the screen.
+        """
         self.FOV        = self.fov_range[2]
         self.distance   = self.default_dist
         self.x_offset   = 0
@@ -438,6 +444,23 @@ Root n. size: {data[12]:.2e}\n"""
         self.y_rotation = self.y_rot_range[2] + self.start_y_rot
 
     def get_screen_xy(self, x, y, z):
+        """Method that transforms a 3d point into 2d point.
+
+        Mehtod that performs matrix multiplication and more to determine
+        the correct 2d screen position of a 3d point. Uses rotation,
+        transformation and distance aswell as FOV.
+
+        Args:
+            x: x component of position in 3d space
+            y: y component of position in 3d space
+            z: z component of position in 3d space
+
+        Returns:
+            Either returns a xy position tuple and the point distance
+            factor f. If the point is behind the screen None,None is returned.
+            The output will be used if it is not None,None during calculations
+            in the method update vertices.
+        """
         default_pos = np.array([[x], [y], [z]])
         pos = self.rotation_matrix * default_pos
 
