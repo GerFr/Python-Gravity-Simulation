@@ -331,9 +331,30 @@ class Interface():
         if self.distance < 0:
             self.distance = 0
 
-    # [self.focus_type, self.focused_body, self.absolute_pos, self.theta, self.restitution_coefficient, self.total_ekin, self.total_epot, self.total_e, cm_pos,  self.iteration, len(self.bodies), self.tree.root_node.middle, self.tree.root_node.dimension]]
 
     def draw_data(self, data):
+        """Method that writes data onto the screen.
+
+        Interface method that writes detailed data onto the turtle canvas.
+        Uses the data arg adn formats it to a specfic form.
+
+        Args:
+            data: list of body and system attributes that will be written
+            onto the screen. It includes:
+                0: type of focus either "none", "body" or "cm" 
+                1: the focused body
+                2: the absolute postion of that body
+                3: theta of the barnes hut algorythm
+                4: the restituion coefficient for collisions
+                5: the total kinetic energy 
+                6: the total potential energy 
+                7: the total energy
+                8: the positon of the center of mass
+                9: the curretn iteration
+                10: the amount of bodies
+                11: middle of the octree root node
+                12: dimensionof the octree root node
+        """
         y_pos = .20
         text = ""
         if data[1] is not None:  # focus on body
@@ -390,6 +411,15 @@ Root n. size: {data[12]:.2e}\n"""
         self.data_pointer.write(text, move=True, align="left", font=self.font)
 
     def draw_time(self, time):
+        """Method that draws the physics time.
+
+        Tkinter event which is called by the scroll wheel.
+        Determines distance and therfore size of the object on the screen.
+
+        Args:
+            event: Mandatory tkinter event argument. Used to get the
+            scroll distance to determine the change in distance.
+        """
         self.data_pointer.goto(self.width * -0.46, -self.height * 0.42)
         times = ConvertSectoDay(self.solar_system.time)
         text = ""
