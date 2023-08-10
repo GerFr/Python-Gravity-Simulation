@@ -481,9 +481,9 @@ Root n. size: {data[12]:.2e}\n"""
             return None, None
 
     def draw_last_pos(self, last_pos, color, radius, body_size_factor):
-        """Method that draws the trwil of the body.
+        """Method that draws the trail of the body.
 
-        Method that draws the trail of bodies. Only draws line
+        Method that draws the trail of a body. Only draws line
         if the points of that Segment are on the screen wich 
         means screen position and size factor f is not None.
 
