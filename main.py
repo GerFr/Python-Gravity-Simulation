@@ -446,7 +446,7 @@ Root n. size: {data[12]:.2e}\n"""
     def get_screen_xy(self, x, y, z):
         """Method that transforms a 3d point into 2d point.
 
-        Mehtod that performs matrix multiplication and more to determine
+        Method that performs matrix multiplication and more to determine
         the correct 2d screen position of a 3d point. Uses rotation,
         transformation and distance aswell as FOV.
 
@@ -481,6 +481,19 @@ Root n. size: {data[12]:.2e}\n"""
             return None, None
 
     def draw_last_pos(self, last_pos, color, radius, body_size_factor):
+        """Method that draws the trwil of the body.
+
+        Method that draws the trail of bodies. Only draws line
+        if the points of that Segment are on the screen wich 
+        means screen position and size factor f is not None.
+
+        Args:
+            last_pos: list of last positions of the body.
+            color: color of the body.
+            radius: radius of the body.
+            body_size_factor: size factor that 
+                scales body size.
+        """
         last_screen_pos = []
         last_pos.reverse()
         for i, pos in enumerate(last_pos):
