@@ -21,6 +21,7 @@ class Simulation:
             rc: Restitution coefficient for collisions.
             absolute_pos: Bool value to determine type of movement.
             focus_index: Index of the list focus_options form 0 to 2.
+            node_type: String that determines what nodes are displayed.
         """
         self.restitution_coefficient = rc
         self.focus_options  = ["none", "body", "cm"]
@@ -36,7 +37,7 @@ class Simulation:
         self.total_e        = 0
         self.cm_pos         = np.array([0, 0, 0])
         self.cm_velo        = None
-
+            
         if focus_index >= 0 and focus_index < len(self.focus_options):
             self.focus_index = focus_index
         else:
@@ -100,7 +101,7 @@ class Simulation:
         for body in self.bodies:
             body.trail = []
 
-    def calculate(self, timestep, draw_box):
+    def calculate(self, timestep, draw_box, node_type):
         """Method that calculates a simulation physics step.
 
         Method that calls functions for physics calculations. 
@@ -115,7 +116,7 @@ class Simulation:
         """
         if self.first:
             self.first = False
-            self.update_interactions()
+            self.update_interactions(node_type)
             for body in self.bodies:
                 body.acceleration = body.force / body.mass
 
@@ -124,7 +125,7 @@ class Simulation:
             body.update_velocity(timestep)
             body.update_position(timestep)
 
-        self.update_interactions()
+        self.update_interactions(node_type)
 
         self.tree_nodes = []
         if draw_box:
@@ -185,7 +186,7 @@ class Simulation:
 
         return body_data, self.tree_nodes, system_data, self.cm_pos - default_pos
 
-    def update_interactions(self):
+    def update_interactions(self, node_type):
         center = self.get_focus_pos()
 
         largest_val = 0
@@ -200,7 +201,7 @@ class Simulation:
 
         dimension = math.sqrt(((furthest_body.position[largest_index] - center[largest_index]) * 2.5)**2)
         root = Node(center, dimension)
-        self.tree = Octree(self.bodies, root, self.theta)
+        self.tree = Octree(self.bodies, root, self.theta, node_type)
         root.compute_mass_distribution()
         self.tree.update_forces_collisions()
         self.compute_collisions(self.tree.collision_dic)

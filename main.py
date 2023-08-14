@@ -67,7 +67,7 @@ class Interface():
         self.planet_size_factor = 80
         self.min_body_size = .5
         self.path_planet_color = True
-        self.draw_box       = False
+        self.draw_box       = True
         self.draw_trail     = True
         self.min_trail_size = .5
         self.trail_length   = 100000
@@ -84,6 +84,10 @@ class Interface():
         self.max_frame      = 3600
 
         self.draw_rot       = True
+        self.node_list_index= 1
+        self.node_list      = ["regional", "point", "both"]
+        self.node_type      = self.node_list[self.node_list_index]
+        self.grid_thickness = 2 * 10**9
         self.rot_cube_pos   = [.8, -.8]  # zwischen -1,1, scale of screen
         self.rot_cube_scale = 80
         self.rot_cube_scolor = "grey"
@@ -484,7 +488,7 @@ Root n. size: {data[12]:.2e}\n"""
             pos2 = qube[line[1]][0]
             if pos1 and pos2 is not None:
                 f = (qube[line[0]][1] + qube[line[1]][1]) / 2
-                self.pointer.pensize(self.path_size * f / 2)
+                self.pointer.pensize(self.grid_thickness * f / 2)
                 self.pointer.goto(pos1)
                 self.pointer.down()
                 self.pointer.goto(pos2)
@@ -728,7 +732,7 @@ Root n. size: {data[12]:.2e}\n"""
             self.frame_count += 1
             t1 = time.time()
             for system in self.simulations:
-                system.calculate(self.timestep, self.draw_box)
+                system.calculate(self.timestep, self.draw_box, self.node_type)
             t2 = time.time()
             self.physics_time = t2 - t1
 
