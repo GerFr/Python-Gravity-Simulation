@@ -8,9 +8,20 @@ from BarnesHut import Octree, Node
 
 
 class Simulation:
+    """Handles data and connection between simulation bodies."""
 
     def __init__(self, theta=1, rc=0, absolute_pos=True, focus_index=0):
+        """Setup of the simulation.
 
+        Method that sets up the simulation with parameters and type of
+        focus.
+
+        Args:
+            theta: Theta value for the Barnes Hut simulation.
+            rc: Restitution coefficient for collisions.
+            absolute_pos: Bool value to determine type of movement.
+            focus_index: Index of the list focus_options form 0 to 2.
+        """
         self.restitution_coefficient = rc
         self.focus_options  = ["none", "body", "cm"]
         self.absolute_pos   = absolute_pos
@@ -36,6 +47,9 @@ class Simulation:
     def add_body(self, body):
         self.bodies.append(body)
 
+    def get_bodies(self):
+        return self.bodies
+
     def remove_body(self, body):
         self.bodies.remove(body)
         if body == self.focused_body and len(self.bodies) > 0:
@@ -51,7 +65,54 @@ class Simulation:
         else:
             self.focused_body = None
 
+    def update_center_of_mass(self, timestep):
+        new_pos = np.array(self.tree.root_node.center_of_mass)
+        old_pos = self.cm_pos
+        self.cm_velo = (new_pos - old_pos) / timestep
+        self.cm_pos = new_pos
+
+    def get_focus_pos(self):
+        if self.focus_type == "body":
+            pos = self.focused_body.position
+        elif self.focus_type == "cm":
+            pos = self.cm_pos
+        else:
+            pos = np.array([0, 0, 0])
+        return pos
+
+    def switch_focus(self, direction):
+        if self.focus_type == "body":
+            focused_index = self.bodies.index(self.focused_body)
+
+            if direction == "previous":
+                focused_index += 1
+                if focused_index > len(self.bodies) - 1:
+                    focused_index = 0
+
+            elif direction == "next":
+                focused_index -= 1
+                if focused_index < 0:
+                    focused_index = len(self.bodies) - 1
+
+            self.set_focus(self.bodies[focused_index])
+
+    def clear_trail(self):
+        for body in self.bodies:
+            body.trail = []
+
     def calculate(self, timestep, draw_box):
+        """Method that calculates a simulation physics step.
+
+        Method that calls functions for physics calculations. 
+        Also includes caclulations for the total energy. If draw_box is
+        true the boxes of the octree are also extracted.
+
+        Args:
+            timestep: Amount of seconds that are counted with in the
+                physics calculations.
+            draw_box: Boolean value that determines if cube data should be 
+                extracted. Implemented to run faster.
+        """
         if self.first:
             self.first = False
             self.update_interactions()
@@ -86,25 +147,16 @@ class Simulation:
         self.time += timestep
         self.iteration += 1
 
-    def update_center_of_mass(self, timestep):
-        new_pos = np.array(self.tree.root_node.center_of_mass)
-        old_pos = self.cm_pos
-        self.cm_velo = (new_pos - old_pos) / timestep
-        self.cm_pos = new_pos
-
-    def get_bodies(self):
-        return self.bodies
-
-    def get_focus_pos(self):
-        if self.focus_type == "body":
-            pos = self.focused_body.position
-        elif self.focus_type == "cm":
-            pos = self.cm_pos
-        else:
-            pos = np.array([0, 0, 0])
-        return pos
-
     def get_data(self):
+        """Method that gets simulation data.
+
+        Method that exports simulation data in the form of a list.
+        The list includes almost all values of the simulation excluding the
+        bodies themselves.
+
+        Returns:
+            Body data, Octree data and system data for further usage.
+        """
         default_pos = self.get_focus_pos()
 
         body_data = []
@@ -133,26 +185,6 @@ class Simulation:
 
         return body_data, self.tree_nodes, system_data, self.cm_pos - default_pos
 
-    def switch_focus(self, direction):
-        if self.focus_type == "body":
-            focused_index = self.bodies.index(self.focused_body)
-
-            if direction == "previous":
-                focused_index += 1
-                if focused_index > len(self.bodies) - 1:
-                    focused_index = 0
-
-            elif direction == "next":
-                focused_index -= 1
-                if focused_index < 0:
-                    focused_index = len(self.bodies) - 1
-
-            self.set_focus(self.bodies[focused_index])
-
-    def clear_trail(self):
-        for body in self.bodies:
-            body.trail = []
-
     def update_interactions(self):
         center = self.get_focus_pos()
 
@@ -174,9 +206,15 @@ class Simulation:
         self.compute_collisions(self.tree.collision_dic)
 
     def compute_collisions(self, collisions):
-        # sort collisions from lowest to highest mass
-        # we know that body has bigger mass than other so other is deleted
-        # we have to check if other was deleted by a previous collision with another planet
+        """Method that computes body collisions.
+
+        Method that computes body collisions based on the resitution
+        coefficient. Sort collisions from lowest to highest mass. So all
+        collisions can be determined. Calls body to body inelastic collision.
+
+        Args:
+            collisions: All collisons as extractes from the Barnes-Hut program.
+        """
         self.destroyed = []
         bodies = list(collisions.keys())
         bodies.sort(key=lambda element: element.mass)
@@ -188,10 +226,25 @@ class Simulation:
 
 
 class SimulationBody:
+    """Data storage and caclulation of a simulation body"""
 
-    def __init__(self, solar_system, name, mass, density, position, velocity, color, nr_pos, point_dist):
+    def __init__(self, simulation, name, mass, density, position, velocity, color, nr_pos, point_dist):
+        """Method that sets up a simulation body.
 
-        self.solar_system   = solar_system
+        Method sets up and declares variables for a simulation body.
+
+        Args:
+            simulation: Simulation that stores all other bodies.
+            name: Name/Unique identifier of body.
+            mass: Mass of the body in kg.
+            density: Density of the body in g/cm3.
+            position: Position vector in meters.
+            velocity: Velocity vector in m/s.
+            color: Color of the body.
+            nr_pos: Trail node number of the body.
+            point_dist: Distance between nodes in the trail.
+        """
+        self.simulation     = simulation
         self.name           = name
         self.mass           = mass  # mass in kg
         self.density        = density  # density in g/cm^3
@@ -207,16 +260,25 @@ class SimulationBody:
         self.force          = np.array([0, 0, 0])
         self.e_pot          = 0
         self.e_kin          = 0
-        self.solar_system.add_body(self)
+        self.simulation.add_body(self)
 
     def update_position(self, timestep):
+        """Method that calculates the body position.
+
+        Method that calculates the body position follwing verlet velocity
+        integration. Subtracts movement of focus_body if the view is movement
+        is relative.
+
+        Args:
+            timestep: Amount of seconds for the calculations.
+        """
         self.position += (timestep * (self.velocity + timestep * self.acceleration / 2))
 
-        if not self.solar_system.absolute_pos:  # relative movement
-            if self.solar_system.focus_type == "body":
-                self.position -= (timestep * (self.solar_system.focused_body.velocity + timestep * self.solar_system.focused_body.acceleration / 2))
-            elif self.solar_system.focus_type == "cm":
-                self.position -= self.solar_system.cm_velo
+        if not self.simulation.absolute_pos:  # relative movement
+            if self.simulation.focus_type == "body":
+                self.position -= (timestep * (self.simulation.focused_body.velocity + timestep * self.simulation.focused_body.acceleration / 2))
+            elif self.simulation.focus_type == "cm":
+                self.position -= self.simulation.cm_velo
 
         self.counter += 1
         if self.counter == self.point_dist:
@@ -227,6 +289,14 @@ class SimulationBody:
             del self.trail[0]
 
     def update_velocity(self, timestep):
+        """Method that calculates body velocity.
+
+        Method that calculates body velocity following velocity
+        verlet ingtegration.
+
+        Args:
+            timestep: Amount of seconds for the calculations.
+        """
         newacc = self.force / self.mass
         self.velocity += (self.acceleration + newacc) * timestep / 2
         self.acceleration = newacc
@@ -237,6 +307,18 @@ class SimulationBody:
         return ((3 * self.mass) / (4 * math.pi * density_kg))**(1 / 3)
 
     def inelastic_collision(self, other, restitution_coefficient):
+        """Method that calculates an inelastic collision.
+
+        Method that calculates the collision between two objects based
+        on the restitution coefficient. If that coefficient if 0 the planets
+        merge. If the coefficient is higher than 0 to 1 the collision is more
+        elastic. Destroys body that is smaller than the other.
+
+        Args:
+            other: Other body that takes part in the collision.
+            restitution_coefficient: Coefficient that determines type of
+                collision.
+        """
         # only if restitution_coefficient is 0 bodies merge
         velo_u = ((self.mass * self.velocity) + (other.mass * other.velocity)) / (self.mass + other.mass)
 
@@ -245,7 +327,7 @@ class SimulationBody:
             self.velocity = velo_u
             self.mass += other.mass
             self.radius = self.calculate_radius()
-            self.solar_system.destroyed.append(other)
+            self.simulation.destroyed.append(other)
         else:
             # somewhat elastic collision
             r = restitution_coefficient
@@ -256,35 +338,35 @@ class SimulationBody:
 # ---------------------------------------------------------------------------------------------------------------------
 class Sun(SimulationBody):
 
-    def __init__(self, solar_system, name="default sun", sol_mass=1, density=1.41, position_AU=(0, 0, 0), velocity_km=(0, 0, 0), color="yellow", nr_pos=50, point_dist=10):
+    def __init__(self, simulation, name="default sun", sol_mass=1, density=1.41, position_AU=(0, 0, 0), velocity_km=(0, 0, 0), color="yellow", nr_pos=50, point_dist=10):
         au = 1.496 * 10**11
         km = 10**3
         solM = 1.989 * (10**30)
         mass = sol_mass * solM  # multiple of solar mass
         position = tuple(au * pos for pos in position_AU)
         velocity = tuple(km * velo for velo in velocity_km)
-        super(Sun, self).__init__(solar_system, name, mass, density, position, velocity, color, nr_pos, point_dist)
+        super(Sun, self).__init__(simulation, name, mass, density, position, velocity, color, nr_pos, point_dist)
 
 
 class Planet(SimulationBody):
 
-    def __init__(self, solar_system, name="default planet", ea_mass=1, density=5.5, position_AU=(0, 0, 0), velocity_km=(0, 0, 0), color="blue", nr_pos=50, point_dist=10):
+    def __init__(self, simulation, name="default planet", ea_mass=1, density=5.5, position_AU=(0, 0, 0), velocity_km=(0, 0, 0), color="blue", nr_pos=50, point_dist=10):
         au = 1.496 * 10**11
         km = 10**3
         eam = 5.972 * 10**24
         mass = ea_mass * eam  # multiple of solar mass
         position = tuple(au * pos for pos in position_AU)
         velocity = tuple(km * velo for velo in velocity_km)
-        super(Planet, self).__init__(solar_system, name, mass, density, position, velocity, color, nr_pos, point_dist)
+        super(Planet, self).__init__(simulation, name, mass, density, position, velocity, color, nr_pos, point_dist)
 
 
 class Blackhole(SimulationBody):
 
-    def __init__(self, solar_system, name="default hole", sol_mass=10, density=4 * 10**14, position_AU=(0, 0, 0), velocity_km=(0, 0, 0), color="black", nr_pos=50, point_dist=10):
+    def __init__(self, simulation, name="default hole", sol_mass=10, density=4 * 10**14, position_AU=(0, 0, 0), velocity_km=(0, 0, 0), color="black", nr_pos=50, point_dist=10):
         au = 1.496 * 10**11
         km = 10**3
         solM = 1.989 * (10**30)
         mass = sol_mass * solM  # multiple of solar mass
         position = tuple(au * pos for pos in position_AU)
         velocity = tuple(km * velo for velo in velocity_km)
-        super(Planet, self).__init__(solar_system, name, mass, density, position, velocity, color, nr_pos, point_dist)
+        super(Planet, self).__init__(simulation, name, mass, density, position, velocity, color, nr_pos, point_dist)

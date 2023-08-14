@@ -450,9 +450,9 @@ Root n. size: {data[12]:.2e}\n"""
         transformation and distance aswell as FOV.
 
         Args:
-            x: X component of position in 3d space
-            y: Y component of position in 3d space
-            z: Z component of position in 3d space
+            x: X component of position in 3d space.
+            y: Y component of position in 3d space.
+            z: Z component of position in 3d space.
 
         Returns:
             Either returns a xy position tuple and the point distance
