@@ -191,7 +191,6 @@ class Interface():
             widget: A tkinter widget that will be scanned. Preferably the
                 turtle canvas.
         """
-
         x = self.window.winfo_rootx() + widget.winfo_x()
         y = self.window.winfo_rooty() + widget.winfo_y()
         x1 = x + widget.winfo_width()
@@ -200,16 +199,6 @@ class Interface():
         image.save(f"{self.image_folder}/frame_{self.frame_count}.gif")
 
     def switch_focus(self, event, direction):
-        """Switch of focus between bodies.
-
-        Tkinter event which is called by the arrow keys.
-
-        Args:
-            event: Mandatory tkinter event argument.
-            direction: A string, either left or right, wich shows wich
-                next body is selected.
-        """
-
         if direction == "left":
             self.solar_system.switch_focus("previous")
         elif direction == "right":
@@ -230,16 +219,6 @@ class Interface():
             self.pause_button.config(text="pause")
 
     def mouse_off(self, event, button):
-        """Event to determine mouse release of different buttons.
-
-        Tkinter event which is called by the arrow keys.
-        Sets mouse_click arguments for specific buttons to False,
-        thus ending the specific mouse button movement.
-
-        Args:
-            event: Mandatory tkinter event argument.
-            button: Strings of either b1, b2 or b3 to determine the button.
-        """
         if button == "b1":
             self.mouse_click1 = False
         elif button == "b2":
@@ -248,16 +227,6 @@ class Interface():
             self.mouse_click3 = False
 
     def change_fov(self, event):
-        """Event to change the FOV.
-
-        Tkinter event which is called by the middle mouse button.
-        Activates the specific mouse click initiating the mouse movement and
-        adds mouse change of position to the FOV value.
-
-        Args:
-            event: Mandatory tkinter event argument. Used to determine 
-                mouse movement.
-        """
         if not self.mouse_click2:
             self.old_y = event.y
             self.mouse_click2 = True
@@ -271,16 +240,6 @@ class Interface():
                 self.FOV = self.fov_range[1]
 
     def rotation(self, event):
-        """Event to change the rotation.
-
-        Tkinter event which is called by the right mouse button.
-        Activates the specific mouse click initiating the mouse movement and
-        adds mouse change of position to the x and y rotation.
-
-        Args:
-            event: Mandatory tkinter event argument. Used to determine 
-                mouse movement.
-        """
         if not self.mouse_click3:
             self.old_x = event.x
             self.old_y = event.y
@@ -297,16 +256,6 @@ class Interface():
                 self.y_rotation = self.y_rot_range[1]
 
     def offset(self, event):
-        """Event to change the x/y offset.
-
-        Tkinter event which is called by the left mouse button.
-        Activates the specific mouse click initiating the mouse movement and
-        adds mouse change of position to the x and y position.
-
-        Args:
-            event: Mandatory tkinter event argument. Used to determine
-                mouse movement.
-        """
         if not self.mouse_click1:
             self.old_x = event.x
             self.old_y = event.y
@@ -318,15 +267,6 @@ class Interface():
             self.old_y = event.y
 
     def mouse_scroll(self, event):
-        """Event to change the distance.
-
-        Tkinter event which is called by the scroll wheel.
-        Determines distance and therfore size of the object on the screen.
-
-        Args:
-            event: Mandatory tkinter event argument. Used to get the
-                scroll distance to determine the change in distance.
-        """
         self.distance -= (event.delta) * self.distance / 1000
         if self.distance < 0:
             self.distance = 0
@@ -429,12 +369,6 @@ Root n. size: {data[12]:.2e}\n"""
         self.data_pointer.write(text, align="left", font=self.font)
 
     def reset(self):
-        """Method that reset 3d view variables.
-
-        Resets transformation, distance and rotation variables to
-        predetermined values. Determines distance and therfore size of
-        the object on the screen.
-        """
         self.FOV        = self.fov_range[2]
         self.distance   = self.default_dist
         self.x_offset   = 0
@@ -601,30 +535,11 @@ Root n. size: {data[12]:.2e}\n"""
             self.pointer.write(coord[i], align="center", font=self.font)
 
     def draw_cm(self, cm_pos):
-        """Method that draws the center of mass.
-
-        Method that draws the center of mass of the simulation.
-
-        Args:
-            cm_pos: Position of the center of mass.
-        """
         pos, f = self.get_screen_xy(*cm_pos)
         if pos is not None:
             self.draw_circle(self.pointer, pos, self.cm_rad, self.cm_color, self.cm_color)
 
     def draw_circle(self, pointer, pos, rad, pencolor, fillcolor):
-        """Method that draws circles.
-
-        Method that draws a circle for the system bodies and the
-        center of mass. It uses turtle.circle.
-
-        Args:
-            pointer: Turtle pointer that draws the turtle.
-            pos: Position of the circle.
-            rad: Radius of the circle.
-            pencolor: Color of the circle outline.
-            fillcolor: Color of the circle.
-        """
         pointer.goto(pos)
         pointer.fd(rad)
         pointer.left(90)
@@ -637,18 +552,6 @@ Root n. size: {data[12]:.2e}\n"""
         pointer.up()
 
     def get_size_factor(self, body_type):
-        """Method that gets a size factor.
-
-        Method that gets the size factor of simulation body. Used to
-        scale the body and make it more visible in the simulation.
-
-        Args:
-            body_type: Type of simulation body.
-
-        Returns:
-            Either returns size factor of a certain body or 1 if
-            the body is not known.
-        """
         if body_type is Sun:
             return self.star_size_factor
         elif body_type is Planet:
@@ -852,17 +755,6 @@ node={self.time_nodes: .4f}")
 
 
 def ConvertSectoDay(n):
-    """Method that transforms a 3d point into 2d point.
-
-    Method that converts an amount of seconds into a number of years,
-    months, days, hours and seconds.
-
-    Args:
-        n: Amount of seconds.
-
-    Returns:
-        Tuple of years, days, hours, minutes and seconds.
-    """
     year = n // (365 * 24 * 3600)
     n %= (365 * 24 * 3600)
     day = n // (24 * 3600)
