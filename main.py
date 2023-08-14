@@ -14,7 +14,7 @@ import math
 import tkinter
 import turtle
 import time
-from SolarSystem import SolarSystem, Planet, Sun, Blackhole
+from Simulation import Simulation, Planet, Sun, Blackhole
 import numpy as np
 import random
 from PIL import ImageGrab
@@ -120,9 +120,9 @@ class Interface():
         # Benchmarking
         self.benchmark      = False
         self.setup_canvas()
-        self.setup_solar_system()
+        self.setup_simulation()
         self.reset()
-        self.window.id = self.window.after(self.timepause, self.update_system)
+        self.window.id = self.window.after(self.timepause, self.update_program)
         self.window.mainloop()
 
     def setup_canvas(self):
@@ -331,7 +331,6 @@ class Interface():
         if self.distance < 0:
             self.distance = 0
 
-
     def draw_data(self, data):
         """Method that writes data onto the screen.
 
@@ -339,7 +338,7 @@ class Interface():
         Uses the data arg adn formats it to a specfic form.
 
         Args:
-            data: list of body and system attributes that will be written
+            data: List of body and system attributes that will be written
                 onto the screen. It includes:
                 0: type of focus either "none", "body" or "cm" 
                 1: the focused body
@@ -418,7 +417,7 @@ Root n. size: {data[12]:.2e}\n"""
         time in clear steps.
 
         Args:
-            time: seconds of physics time since initiation. 
+            time: Seconds of physics time since initiation. 
         """
         self.data_pointer.goto(self.width * -0.46, -self.height * 0.42)
         times = ConvertSectoDay(self.solar_system.time)
@@ -451,9 +450,9 @@ Root n. size: {data[12]:.2e}\n"""
         transformation and distance aswell as FOV.
 
         Args:
-            x: x component of position in 3d space
-            y: y component of position in 3d space
-            z: z component of position in 3d space
+            x: X component of position in 3d space
+            y: Y component of position in 3d space
+            z: Z component of position in 3d space
 
         Returns:
             Either returns a xy position tuple and the point distance
@@ -488,10 +487,10 @@ Root n. size: {data[12]:.2e}\n"""
         means screen position and size factor f is not None.
 
         Args:
-            last_pos: list of last positions of the body.
-            color: color of the body.
-            radius: radius of the body.
-            body_size_factor: size factor that 
+            last_pos: List of last positions of the body.
+            color: Color of the body.
+            radius: Radius of the body.
+            body_size_factor: Size factor that 
                 scales body size.
         """
         last_screen_pos = []
@@ -524,6 +523,19 @@ Root n. size: {data[12]:.2e}\n"""
         self.pointer.up()
 
     def draw_cube(self, qube):
+        """Method that draws a cube of octrees.
+
+        Method that draws the corners and lines of octree nodes/cubes.
+        Scales the line size by the distance scale factor f.
+
+        Args:
+            qube: Data of the cube corners, list of 8 points
+            wich are lists of 3 floats.
+                right front top, bottom
+                right back top, bottom
+                left front top, bottom
+                left back top, bottom
+        """
         for i in range(len(qube)):
             qube[i] = self.get_screen_xy(*qube[i])
         self.pointer.pencolor(self.cube_color)
@@ -545,6 +557,12 @@ Root n. size: {data[12]:.2e}\n"""
                 self.pointer.up()
 
     def draw_rot_cube(self):
+        """Method that draws a rotational indicator.
+
+        Method that draws three intersecting lines displaying the
+        x, y and z axes. Highlight of part of axes that is geometrically
+        closer to the screen.
+        """
         coord  = ["X", "Y", "Z"]
         fig = []
         mx = self.width * self.rot_cube_pos[0] / 2
@@ -583,11 +601,30 @@ Root n. size: {data[12]:.2e}\n"""
             self.pointer.write(coord[i], align="center", font=self.font)
 
     def draw_cm(self, cm_pos):
+        """Method that draws the center of mass.
+
+        Method that draws the center of mass of the simulation.
+
+        Args:
+            cm_pos: Position of the center of mass.
+        """
         pos, f = self.get_screen_xy(*cm_pos)
         if pos is not None:
             self.draw_circle(self.pointer, pos, self.cm_rad, self.cm_color, self.cm_color)
 
     def draw_circle(self, pointer, pos, rad, pencolor, fillcolor):
+        """Method that draws circles.
+
+        Method that draws a circle for the system bodies and the
+        center of mass. It uses turtle.circle.
+
+        Args:
+            pointer: Turtle pointer that draws the turtle.
+            pos: Position of the circle.
+            rad: Radius of the circle.
+            pencolor: Color of the circle outline.
+            fillcolor: Color of the circle.
+        """
         pointer.goto(pos)
         pointer.fd(rad)
         pointer.left(90)
@@ -600,6 +637,18 @@ Root n. size: {data[12]:.2e}\n"""
         pointer.up()
 
     def get_size_factor(self, body_type):
+        """Method that gets a size factor.
+
+        Method that gets the size factor of simulation body. Used to
+        scale the body and make it more visible in the simulation.
+
+        Args:
+            body_type: Type of simulation body.
+
+        Returns:
+            Either returns size factor of a certain body or 1 if
+            the body is not known.
+        """
         if body_type is Sun:
             return self.star_size_factor
         elif body_type is Planet:
@@ -608,7 +657,13 @@ Root n. size: {data[12]:.2e}\n"""
             return 1
             print(f"No size indication for bodytype: {body_type}")
 
-    def update_vertices(self):
+    def update_screen(self):
+        """Method that updates the turtle canvas.
+
+        Method that calls other functions and draws all data, bodies and 
+        symbols onto the screen. Iterates over the active systems and computes 
+        body positions, trails.
+        """
 
         self.rotation_matrix = Rx(math.radians(self.x_rotation)) * Ry(math.radians(180 - self.y_rotation)) * Rz(math.radians(180 - self.z_rotation))
         self.finished = False
@@ -616,7 +671,7 @@ Root n. size: {data[12]:.2e}\n"""
 
         # onscreen((name,pos,radius,mass,color,trail,velocity,acceleration,density,force,2dpos,f,type))
         self.onscreen = []
-        for system in self.solar_systems:
+        for system in self.simulations:
             self.solar_system = system
             bodies, nodes, system, cm = system.get_data()
 
@@ -671,7 +726,15 @@ Root n. size: {data[12]:.2e}\n"""
         self.finished = True
 
     def color_map_bodies(self, data):
+        """Method that changes a bodies color based on different factors.
 
+        Method that iterates over all bodies and changes their color 
+        by mapping the magintude of a certain characteristic like the mass 
+        over a predetermined color list.
+
+        Args:
+            data: List of attributes of onscreen bodies.
+        """
         dic = {"mass": 3, "radius": 2, "density": 8,
                "velocity": [6, self.max_velocity],
                "acceleration": [7, self.max_acceleration],
@@ -700,8 +763,13 @@ Root n. size: {data[12]:.2e}\n"""
                            data[i][3], color, data[i][5], data[i][6],
                            data[i][7], data[i][8], data[i][9])
 
-    def random_system(self):
-        self.solar_system = SolarSystem(self.theta, self.restitution_coefficient, self.absolute_pos, self.focus_index)
+    def random_simulation(self):
+        """Method that creates data for a random simulation.
+
+        Method that creates data for a random n-body simulation. Not very
+        useful for solar system visualizations.
+        """
+        self.solar_system = Simulation(self.theta, self.restitution_coefficient, self.absolute_pos, self.focus_index)
         for i in range(self.number_stars + self.number_planets):
             position = ((random.randint(0, self.size) - (self.size / 2)) * 10**(-10),
                         (random.randint(0, self.size) - (self.size / 2)) * 10**(-10),
@@ -722,40 +790,48 @@ Root n. size: {data[12]:.2e}\n"""
                 color = random.choice(self.planet_colors)
                 Planet(self.solar_system, name, mass, density, position, velocity, color, self.trail_node_number, self.trail_node_distance)
         self.solar_system.set_focus(None)
-        self.solar_systems = [self.solar_system]
+        self.simulations = [self.solar_system]
 
-    def setup_solar_system(self):
-        self.solar_systems = []
+    def setup_simulation(self):
+        """Method that creates the simulations.
+
+        Method that sets up and gets the starting data for simulations.
+        """
+        self.simulations = []
         for i in range(len(self.starting_data)):
-            self.solar_systems.append(SolarSystem(self.theta, self.restitution_coefficient, self.absolute_pos, self.focus_index))
+            self.simulations.append(Simulation(self.theta, self.restitution_coefficient, self.absolute_pos, self.focus_index))
 
         if self.start_random:
-            self.random_system()
+            self.random_simulation()
 
         elif self.starting_data is not None:
             for i, system in enumerate(self.starting_data):
                 for bodytype in system.keys():
                     for body in system[bodytype]:
                         if bodytype == "suns":
-                            Sun(self.solar_systems[i], body[0], body[1], body[2], body[3], body[4], body[5], self.trail_node_number, self.trail_node_distance)
+                            Sun(self.simulations[i], body[0], body[1], body[2], body[3], body[4], body[5], self.trail_node_number, self.trail_node_distance)
                         elif bodytype == "planets":
-                            Planet(self.solar_systems[i], body[0], body[1], body[2], body[3], body[4], body[5], self.trail_node_number, self.trail_node_distance)
-                self.solar_systems[i].set_focus(None)
+                            Planet(self.simulations[i], body[0], body[1], body[2], body[3], body[4], body[5], self.trail_node_number, self.trail_node_distance)
+                self.simulations[i].set_focus(None)
         else:
             print("no starting data")
 
-    def update_system(self):
+    def update_program(self):
+        """Method that updates the main simulation loop.
+
+        Method that calls update in system phsics and screen.
+        """
         if not self.pause or self.frame_count == 0:
             self.frame_count += 1
             t1 = time.time()
-            for system in self.solar_systems:
+            for system in self.simulations:
                 system.calculate(self.timestep, self.draw_box)
             t2 = time.time()
             self.physics_time = t2 - t1
 
         t1 = time.time()
 
-        self.update_vertices()
+        self.update_screen()
         t2 = time.time()
         self.drawing_time = t2 - t1
 
@@ -772,10 +848,21 @@ node={self.time_nodes: .4f}")
 # self.time_matrix, self.trail_sort, self.video, self.qube_data =
 # rot={self.time_matrix: .4f}, planet={self.trail_sort: .4f}, dta/qube={self.qube_data: .4f}, \
 
-        self.window.id = self.window.after(self.timepause, self.update_system)
+        self.window.id = self.window.after(self.timepause, self.update_program)
 
 
 def ConvertSectoDay(n):
+    """Method that transforms a 3d point into 2d point.
+
+    Method that converts an amount of seconds into a number of years,
+    months, days, hours and seconds.
+
+    Args:
+        n: Amount of seconds.
+
+    Returns:
+        Tuple of years, days, hours, minutes and seconds.
+    """
     year = n // (365 * 24 * 3600)
     n %= (365 * 24 * 3600)
     day = n // (24 * 3600)
@@ -803,6 +890,13 @@ def Rz(theta):
 
 
 def rgb_colors():
+    """Method that creates an RGB rainbow list.
+
+    Mehtod that creates an RGB rainbow list used for color mapping bodies.
+
+    Returns:
+        List of RGB values in a rainbow pattern.
+    """
     rgb_list = []
     for i in range(round(255 / 2)):
         b = 0 + i

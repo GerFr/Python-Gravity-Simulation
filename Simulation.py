@@ -1,4 +1,4 @@
-# Solarsystem module
+# Simulation module
 # Gerrit Fritz
 
 import math
@@ -7,7 +7,7 @@ import random
 from BarnesHut import Octree, Node
 
 
-class SolarSystem:
+class Simulation:
 
     def __init__(self, theta=1, rc=0, absolute_pos=True, focus_index=0):
 
@@ -187,7 +187,7 @@ class SolarSystem:
                     body.inelastic_collision(other, self.restitution_coefficient)
 
 
-class SolarSystemBody:
+class SimulationBody:
 
     def __init__(self, solar_system, name, mass, density, position, velocity, color, nr_pos, point_dist):
 
@@ -254,7 +254,7 @@ class SolarSystemBody:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-class Sun(SolarSystemBody):
+class Sun(SimulationBody):
 
     def __init__(self, solar_system, name="default sun", sol_mass=1, density=1.41, position_AU=(0, 0, 0), velocity_km=(0, 0, 0), color="yellow", nr_pos=50, point_dist=10):
         au = 1.496 * 10**11
@@ -266,7 +266,7 @@ class Sun(SolarSystemBody):
         super(Sun, self).__init__(solar_system, name, mass, density, position, velocity, color, nr_pos, point_dist)
 
 
-class Planet(SolarSystemBody):
+class Planet(SimulationBody):
 
     def __init__(self, solar_system, name="default planet", ea_mass=1, density=5.5, position_AU=(0, 0, 0), velocity_km=(0, 0, 0), color="blue", nr_pos=50, point_dist=10):
         au = 1.496 * 10**11
@@ -278,7 +278,7 @@ class Planet(SolarSystemBody):
         super(Planet, self).__init__(solar_system, name, mass, density, position, velocity, color, nr_pos, point_dist)
 
 
-class Blackhole(SolarSystemBody):
+class Blackhole(SimulationBody):
 
     def __init__(self, solar_system, name="default hole", sol_mass=10, density=4 * 10**14, position_AU=(0, 0, 0), velocity_km=(0, 0, 0), color="black", nr_pos=50, point_dist=10):
         au = 1.496 * 10**11
