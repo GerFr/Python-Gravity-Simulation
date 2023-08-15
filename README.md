@@ -15,19 +15,18 @@ Any help or assistance is greatly appreciated.
 Kindly share this project!
 
 # Planned features
-1.) docstrings - there is a current branch
 
-2.) Type hints
+1.) clicking on objects
 
-3.) unit tests
-
-4.) clicking on objects
-
-5.) data handling with json
+2.) data handling with json
 
 
 
 possible features:
+
+Type hints
+
+Unit tests
 
 placing objects
 
