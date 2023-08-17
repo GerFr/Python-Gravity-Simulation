@@ -24,13 +24,13 @@ Kindly share this project!
 
 possible features:
 
-Type hints
-
-Unit tests
-
 placing objects
 
 ui package 
+
+(Type hints)
+
+(Unit tests)
 
 # Installation guide
 1.) download the code from github (either with .zip or git pull/clone)
