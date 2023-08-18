@@ -38,7 +38,7 @@ ui package
 2.) install requirements.txt
 This can be done with the command 
 
-'py -m pip install -r requirements.txt' 
+`py -m pip install -r requirements.txt` 
   using cmd in the directory of the code.
 
 A python installation is also needed.
