@@ -22,7 +22,7 @@ Kindly share this project!
 
 
 
-possible features:
+**possible features:**
 
 placing objects
 
