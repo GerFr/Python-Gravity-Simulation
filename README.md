@@ -56,7 +56,7 @@ Possible options include a barnes hut overlay or random planet system generation
 
 Gravity Physics
 
-https://thepythoncodingbook.com/2021/12/11/simulating-3d-solar-system-python-matplotlib/
+[The Python Codin Book - Simulating a 3D Solar System In Python Using Matplotlib] (https://thepythoncodingbook.com/2021/12/11/simulating-3d-solar-system-python-matplotlib/)
 
 https://thepythoncodingbook.com/2021/09/29/simulating-orbiting-planets-in-a-solar-system-using-python-orbiting-planets-series-1/
 
