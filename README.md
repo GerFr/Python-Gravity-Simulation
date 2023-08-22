@@ -28,7 +28,7 @@ placing objects
 
 ui package 
 
-please ask for features in discussions!
+please ask for features in [discussions](https://github.com/PhySimdev/Python-Gravity-Simulation/discussions)!
 
 (Type hints)
 
