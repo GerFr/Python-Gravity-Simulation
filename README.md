@@ -30,10 +30,6 @@ ui package
 
 please ask for features in [discussions](https://github.com/PhySimdev/Python-Gravity-Simulation/discussions)!
 
-(Type hints)
-
-(Unit tests)
-
 # Installation guide
 1.) download the code from github (either with .zip or git pull/clone)
 
