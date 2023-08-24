@@ -28,16 +28,18 @@ placing objects
 
 ui package 
 
+
 please ask for features in [discussions](https://github.com/PhySimdev/Python-Gravity-Simulation/discussions)!
 
 # Installation guide
-1.) download the code from github (either with .zip or git pull/clone)
+1.) download the code from github (either with .zip or git clone)
 
 2.) install requirements.txt
 This can be done with the command 
 
 `py -m pip install -r requirements.txt` 
-  using cmd in the directory of the code.
+ 
+using cmd in the directory of the code.
 
 A python installation is also needed.
 
@@ -50,8 +52,6 @@ Possible options include a barnes hut overlay or random planet system generation
 
 # Sources
 
-
-
 Gravity Physics
 
 [The Python Coding Book - Simulating a 3D Solar System In Python Using Matplotlib](https://thepythoncodingbook.com/2021/12/11/simulating-3d-solar-system-python-matplotlib/)
@@ -59,9 +59,6 @@ Gravity Physics
 [Stack Exchange - Velocity verlet pseudo code](https://gamedev.stackexchange.com/questions/15708/how-can-i-implement-gravity)
 
 [gereshes - Verlet Integration](https://gereshes.com/2018/07/09/verlet-integration-the-n-body-problem/)
-
-
-
 
 Barnes Hut
 
@@ -71,10 +68,7 @@ Barnes Hut
 
 [OpenGenus - Octree data structure](https://iq.opengenus.org/octree/)
 
-
-
 Energy
-
 
 [Stack Exchange - Gravitational potential energy of an n-body](https://physics.stackexchange.com/questions/578071/gravitational-potential-energy-of-an-n-body)
 
@@ -82,18 +76,9 @@ Energy
 
 [UMD - The Virial Theorem](https://www.astro.umd.edu/~richard/ASTRO620/QM_chap2.pdf)
 
-
 Collision
 
-https://en.wikipedia.org/wiki/Inelastic_collision
-
-https://www.plasmaphysics.org.uk/collision3d.htm
-
-
-
-Other
-
-https://stackoverflow.com/questions/44947505/how-to-make-a-movie-out-of-images-in-python
+[Plasmaphysics.org.uk - Elastic and Inelastic Collision in Three Dimensions](https://www.plasmaphysics.org.uk/collision3d.htm)
 
 
 
