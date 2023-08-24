@@ -54,7 +54,7 @@ Possible options include a barnes hut overlay or random planet system generation
 
 Gravity Physics
 
-[The Python Codin Book - Simulating a 3D Solar System In Python Using Matplotlib](https://thepythoncodingbook.com/2021/12/11/simulating-3d-solar-system-python-matplotlib/)
+[The Python Coding Book - Simulating a 3D Solar System In Python Using Matplotlib](https://thepythoncodingbook.com/2021/12/11/simulating-3d-solar-system-python-matplotlib/)
 
 [Stack Exchange - Velocity verlet pseudo code](https://gamedev.stackexchange.com/questions/15708/how-can-i-implement-gravity)
 
@@ -76,11 +76,11 @@ Barnes Hut
 Energy
 
 
-https://physics.stackexchange.com/questions/578071/gravitational-potential-energy-of-an-n-body
+[Stack Exchange - Gravitational potential energy of an n-body](https://physics.stackexchange.com/questions/578071/gravitational-potential-energy-of-an-n-body)
 
-https://phys.libretexts.org/Bookshelves/Classical_Mechanics/Variational_Principles_in_Classical_Mechanics_(Cline)/02%3A_Review_of_Newtonian_Mechanics/2.10%3A_Work_and_Kinetic_Energy_for_a_Many-Body_System
+[LibreTexts - Work and Kinetic Energy for a Many-Body System](https://phys.libretexts.org/Bookshelves/Classical_Mechanics/Variational_Principles_in_Classical_Mechanics_(Cline)/02%3A_Review_of_Newtonian_Mechanics/2.10%3A_Work_and_Kinetic_Energy_for_a_Many-Body_System)
 
-https://www.astro.umd.edu/~richard/ASTRO620/QM_chap2.pdf
+[UMD - The Virial Theorem](https://www.astro.umd.edu/~richard/ASTRO620/QM_chap2.pdf)
 
 
 Collision
