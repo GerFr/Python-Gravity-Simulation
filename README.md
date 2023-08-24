@@ -54,8 +54,6 @@ Possible options include a barnes hut overlay or random planet system generation
 
 Gravity Physics
 
-[The Python Codin Book - Simulating Orbiting Planets in a Solar System Using Python](https://thepythoncodingbook.com/2021/09/29/simulating-orbiting-planets-in-a-solar-system-using-python-orbiting-planets-series-1/)
-
 [The Python Codin Book - Simulating a 3D Solar System In Python Using Matplotlib](https://thepythoncodingbook.com/2021/12/11/simulating-3d-solar-system-python-matplotlib/)
 
 [Stack Exchange - Velocity verlet pseudo code](https://gamedev.stackexchange.com/questions/15708/how-can-i-implement-gravity)
@@ -67,15 +65,11 @@ Gravity Physics
 
 Barnes Hut
 
-https://gamedev.stackexchange.com/questions/19393/optimizing-gravity-calculations
+[Lewis Cole Blog - Barnes-Hut Algorithm](https://lewiscoleblog.com/barnes-hut)
 
-https://en.wikipedia.org/wiki/Barnes–Hut_simulation
+[beltoforion - The Barnes-Hut Galaxy Simulator](https://beltoforion.de/en/barnes-hut-galaxy-simulator/)
 
-https://lewiscoleblog.com/barnes-hut
-
-https://beltoforion.de/en/barnes-hut-galaxy-simulator/#idRef2
-
-https://iq.opengenus.org/octree/
+[OpenGenus - Octree data structure](https://iq.opengenus.org/octree/)
 
 
 
