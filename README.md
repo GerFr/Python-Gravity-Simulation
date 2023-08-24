@@ -54,13 +54,13 @@ Possible options include a barnes hut overlay or random planet system generation
 
 Gravity Physics
 
+[The Python Codin Book - Simulating Orbiting Planets in a Solar System Using Python](https://thepythoncodingbook.com/2021/09/29/simulating-orbiting-planets-in-a-solar-system-using-python-orbiting-planets-series-1/)
+
 [The Python Codin Book - Simulating a 3D Solar System In Python Using Matplotlib](https://thepythoncodingbook.com/2021/12/11/simulating-3d-solar-system-python-matplotlib/)
 
-https://thepythoncodingbook.com/2021/09/29/simulating-orbiting-planets-in-a-solar-system-using-python-orbiting-planets-series-1/
+[Stack Exchange - Velocity verlet pseudo code](https://gamedev.stackexchange.com/questions/15708/how-can-i-implement-gravity)
 
-https://gamedev.stackexchange.com/questions/15708/how-can-i-implement-gravity
-
-https://gereshes.com/2018/07/09/verlet-integration-the-n-body-problem/
+[gereshes - Verlet Integration](https://gereshes.com/2018/07/09/verlet-integration-the-n-body-problem/)
 
 
 
