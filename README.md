@@ -16,25 +16,25 @@ Kindly share this project!
 
 # Planned features
 
->1.) clicking on objects
+    1.) clicking on objects
 
->2.) data handling with json
+    2.) data handling with json
 
->3.) placing objects
+    3.) placing objects
 
->4.) ui package 
+    4.) ui package 
 
 please ask for features in [discussions](https://github.com/PhySimdev/Python-Gravity-Simulation/discussions)!
 
 # Installation guide
-1.) download the code from github (either with .zip or git clone)
+    1.) download the code from github (either with .zip or git clone)
 
-2.) install requirements.txt
+    2.) install requirements.txt
 This can be done with the command 
 
-`py -m pip install -r requirements.txt` 
+    `py -m pip install -r requirements.txt` 
  
-using cmd in the directory of the code.
+     using cmd in the directory of the code.
 
 A python installation is also needed.
 
