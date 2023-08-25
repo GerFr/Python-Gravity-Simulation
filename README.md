@@ -16,13 +16,13 @@ Kindly share this project!
 
 # Planned features
 
-1.) clicking on objects
+>1.) clicking on objects
 
-2.) data handling with json
+>2.) data handling with json
 
-3.) placing objects
+>3.) placing objects
 
-4.) ui package 
+>4.) ui package 
 
 please ask for features in [discussions](https://github.com/PhySimdev/Python-Gravity-Simulation/discussions)!
 
