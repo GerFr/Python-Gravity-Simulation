@@ -20,14 +20,9 @@ Kindly share this project!
 
 2.) data handling with json
 
+3.) placing objects
 
-
-**possible features:**
-
-placing objects
-
-ui package 
-
+4.) ui package 
 
 please ask for features in [discussions](https://github.com/PhySimdev/Python-Gravity-Simulation/discussions)!
 
