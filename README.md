@@ -57,7 +57,7 @@ Gravity Physics
 
 Barnes Hut
 
-[Lewis Cole Blog - Barnes-Hut Algorithm](https://lewiscoleblog.com/barnes-hut)
+    [Lewis Cole Blog - Barnes-Hut Algorithm](https://lewiscoleblog.com/barnes-hut)
 
 [beltoforion - The Barnes-Hut Galaxy Simulator](https://beltoforion.de/en/barnes-hut-galaxy-simulator/)
 
