@@ -38,7 +38,7 @@ This can be done with the command
  
 using cmd in the directory of the code.
 
-A python installation is also needed.
+A python installation is also needed. Version 3.10 or above peferred.
 
 # Running the code
 Run the file main.py either from the file explorer, an IDE or CMD/shell.
