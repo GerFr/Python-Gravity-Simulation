@@ -9,7 +9,7 @@ The main file is `main.py` wich has to be run  to be started.
 The Barnes hut algorythm is highly optimised for many bodies and 
 makes larger scale n-body simulations possible.
 
-Example runs can be found at YouTube [here](https://youtube.com/@physimdev).
+Example runs can be found at [YouTube](https://youtube.com/@physimdev).
 
 Any help or assistance is greatly appreciated.
 Kindly share this project!
